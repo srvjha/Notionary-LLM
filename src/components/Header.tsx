@@ -3,6 +3,7 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { Moon, Sun, BookOpen, HelpCircle, DollarSign } from "lucide-react";
+import Link from "next/link";
 // import { useTheme } from "next-themes";
 
 export const Header = () => {
@@ -17,26 +18,18 @@ export const Header = () => {
         </div>
 
         <div className="flex items-center gap-6">
-          <button className="flex items-center gap-1 text-gray-700 dark:text-gray-300 hover:text-blue-600">
-            <HelpCircle className="w-5 h-5" />
-            Guide
-          </button>
-          <button className="flex items-center gap-1 text-gray-700 dark:text-gray-300 hover:text-blue-600">
+          <Link href="/guide">
+            <button className="flex items-center gap-1 text-gray-700 dark:text-gray-300 hover:text-blue-600">
+              <HelpCircle className="w-5 h-5" />
+              Guide
+            </button>
+          </Link>
+          {/* <button className="flex items-center gap-1 text-gray-700 dark:text-gray-300 hover:text-blue-600">
             <DollarSign className="w-5 h-5" />
             Pricing
-          </button>
+          </button> */}
 
-          {/* <Button
-            variant="ghost"
-            size="icon"
-          
-          >
-            {theme === "dark" ? (
-              <Sun className="w-5 h-5 text-yellow-400" />
-            ) : (
-              <Moon className="w-5 h-5 text-blue-400" />
-            )}
-          </Button> */}
+         
         </div>
       </div>
     </header>
