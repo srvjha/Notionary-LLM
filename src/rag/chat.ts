@@ -1,21 +1,23 @@
-import { OpenAIEmbeddings } from "@langchain/openai";
+import { GoogleGenerativeAIEmbeddings } from "@langchain/google-genai";
+// import { OpenAIEmbeddings } from "@langchain/openai";
 import { QdrantVectorStore } from "@langchain/qdrant";
 import OpenAI from "openai";
 
-
 const client = new OpenAI();
-export const chat = async (userQuery: string,collectionName:string) => {
-  const embeddings = new OpenAIEmbeddings({
-    model: "text-embedding-3-large",
+export const chat = async (userQuery: string, collectionName: string) => {
+  const embeddings = new GoogleGenerativeAIEmbeddings({
+    apiKey: process.env.GEMINI_API_KEY,
+    model: "models/embedding-001", // Correct Gemini embeddings model
   });
 
   const vectorStore = await QdrantVectorStore.fromExistingCollection(
     embeddings,
     {
-      url: "http://localhost:6333",
+      url: process.env.QDRANT_URL,
+      apiKey: process.env.QDRANT_API_KEY,
       collectionName,
-    }
-  );
+      
+    });
 
   const vectorRetriver = vectorStore.asRetriever({
     k: 3,

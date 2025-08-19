@@ -15,20 +15,15 @@ import {
 } from "./ui/dialog";
 import { Input } from "./ui/input";
 import { Textarea } from "./ui/textarea";
+import { Button } from "./ui/button";
 
 type UploadSourcesModalProps = {
-  /** The element that opens the modal (e.g., a Button) */
   trigger: React.ReactNode;
-  /** Callback with selected files (drop or choose) */
   onFilesSelected?: (formdata: FormData) => void;
-  /** Click handlers for cards */
-  onWebsiteClick?: () => void;
-  onCopiedTextClick?: () => void;
-  /** Accept string for file input */
+  onWebsiteClick?: (formdata: FormData) => void;
+  onCopiedTextClick?: (formdata: FormData) => void;
   accept?: string;
-  /** Allow multiple files */
   multiple?: boolean;
-  /** Control the dialog from parent if needed */
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
 };
@@ -53,18 +48,48 @@ export default function UploadSourcesModal({
     copiedText: false,
   });
 
+  const [websiteUrl, setWebsiteUrl] = useState("");
+  const [copiedText, setCopiedText] = useState("");
+  const [collectionName, setCollectionName] = useState("");
+  const [textError, setTextError] = useState("");
+
   const handleFiles = useCallback(
     (fileList: FileList | null) => {
       if (!fileList) return;
-      
+
       const file = Array.from(fileList);
       const formData = new FormData();
       formData.append("pdf", file[0]);
       onFilesSelected?.(formData);
       onOpenChange?.(false);
     },
-    [onFilesSelected]
+    [onFilesSelected, onOpenChange]
   );
+
+  const handleWebsiteUpload = () => {
+    if (!websiteUrl) return;
+    const formData = new FormData();
+    formData.append("website", websiteUrl);
+    onWebsiteClick?.(formData);
+    onOpenChange?.(false);
+  };
+
+  const handleCopiedTextUpload = () => {
+    if (copiedText.length > 25000) {
+      setTextError("Text should be 25000 characters or less.");
+      return;
+    }
+    if (!collectionName) {
+      setTextError("Collection name is required.");
+      return;
+    }
+    const formData = new FormData();
+    formData.append("copiedText", copiedText);
+    formData.append("collectionName", collectionName);
+    onCopiedTextClick?.(formData);
+    onOpenChange?.(false);
+    setTextError("");
+  };
 
   const onDrop = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
@@ -85,27 +110,12 @@ export default function UploadSourcesModal({
     setIsDragging(false);
   };
 
-  const handleWebsiteClick = () => {
-    setPopUpContent({
-      uploadFile: false,
-      website: true,
-      copiedText: false,
-    });
-  };
-  const handleCopiedTextClick = () => {
-    setPopUpContent({
-      uploadFile: false,
-      website: false,
-      copiedText: true,
-    });
-  };
-  const handleUploadClick = () => {
-    setPopUpContent({
-      uploadFile: true,
-      website: false,
-      copiedText: false,
-    });
-  };
+  const handleUploadClick = () =>
+    setPopUpContent({ uploadFile: true, website: false, copiedText: false });
+  const handleWebsiteClick = () =>
+    setPopUpContent({ uploadFile: false, website: true, copiedText: false });
+  const handleCopiedTextClick = () =>
+    setPopUpContent({ uploadFile: false, website: false, copiedText: true });
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -116,7 +126,8 @@ export default function UploadSourcesModal({
           <DialogTitle>Upload sources</DialogTitle>
         </DialogHeader>
 
-        {popUpContent["uploadFile"] && (
+        {/* Upload File */}
+        {popUpContent.uploadFile && (
           <div
             onDrop={onDrop}
             onDragOver={onDragOver}
@@ -167,21 +178,41 @@ export default function UploadSourcesModal({
           </div>
         )}
 
-        {/* website area  */}
-        {popUpContent["website"] && (
-          <div>
-            <Input className="" placeholder="Paste your Website URL" />
+        {/* Website */}
+        {popUpContent.website && (
+          <div className="flex flex-col gap-2">
+            <Input
+              placeholder="Paste your Website URL"
+              value={websiteUrl}
+              onChange={(e) => setWebsiteUrl(e.target.value)}
+            />
+            <Button onClick={handleWebsiteUpload}>Upload</Button>
           </div>
         )}
 
-        {/* copied text area  */}
-        {popUpContent["copiedText"] && (
-          <div>
-            <Textarea placeholder="Paste your copied text" />
+        {/* Copied Text */}
+        {popUpContent.copiedText && (
+          <div className="flex flex-col gap-2">
+            <Textarea
+              placeholder="Paste your copied text"
+              value={copiedText}
+              onChange={(e) => setCopiedText(e.target.value)}
+            />
+            <Input
+              placeholder="Enter title for the collection"
+              value={collectionName}
+              onChange={(e) => setCollectionName(e.target.value)}
+              required
+            />
+            {textError && (
+              <p className="text-sm text-red-500">{textError}</p>
+            )}
+            <Button onClick={handleCopiedTextUpload}>Upload</Button>
           </div>
         )}
 
-        <div className="grid grid-cols-3 gap-4">
+        {/* Bottom buttons */}
+        <div className="grid grid-cols-3 gap-4 mt-4">
           <button
             onClick={handleUploadClick}
             className="flex flex-col items-center justify-center gap-2 p-4 border border-neutral-700 rounded-xl hover:bg-neutral-800/70 active:scale-[0.99] transition"

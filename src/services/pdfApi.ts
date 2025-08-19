@@ -24,6 +24,20 @@ export const pdfApi = createApi({
         body: formData,
       }),
     }),
+    uploadWebsite: builder.mutation<UploadResponse, FormData>({
+      query: (formData) => ({
+        url: "webIndexing", // /api/webIndexing
+        method: "POST",
+        body: formData,
+      }),
+    }),
+     uploadText: builder.mutation<UploadResponse, FormData>({
+      query: (formData) => ({
+        url: "textIndexing", // /api/textIndexing
+        method: "POST",
+        body: formData,
+      }),
+    }),
 
     chatWithPdf: builder.mutation<ChatResponse, { userQuery: string; collectionName: string }>({
       query: (body) => ({
@@ -35,4 +49,4 @@ export const pdfApi = createApi({
   }),
 });
 
-export const { useUploadPdfMutation, useChatWithPdfMutation } = pdfApi;
+export const { useUploadPdfMutation, useUploadWebsiteMutation, useUploadTextMutation, useChatWithPdfMutation } = pdfApi;
