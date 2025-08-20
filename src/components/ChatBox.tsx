@@ -16,18 +16,22 @@ interface ChatForm {
 const STORAGE_PREFIX = "chat_history_";
 
 function getCollectionFromTitle(title: string): string | null {
-  let parsed = JSON.parse(title);
+  
+  let parsed = title;
+  console.log({parsed})
   for (let i = 0; i < localStorage.length; i++) {
     const key = localStorage.key(i) || "";
-    let fileName = key.replace("chat_history_", "");
-    if (parsed.includes(fileName)) {
+    let fileName = key.replace(STORAGE_PREFIX, "").trim();
+    console.log({fileName, key})
+    if (JSON.stringify(parsed) === JSON.stringify(fileName)) {
       return key;
     }
   }
   return null;
 }
-function restoreChat() {
-  const savedTitles = localStorage.getItem("titles");
+function restoreChat(collectionName: string) {
+  const savedTitles = collectionName;
+  console.log({savedTitles});
 
   if (!savedTitles) return null;
 
@@ -35,6 +39,7 @@ function restoreChat() {
   if (!matchedCollectionKey) return null;
 
   const savedChat = localStorage.getItem(matchedCollectionKey);
+  console.log({matchedCollectionKey, savedChat});
   return savedChat ? JSON.parse(savedChat) : null;
 }
 
@@ -50,12 +55,15 @@ const ChatBox = ({
   const summary = pdf?.summary || "";
   const collectionName = pdf?.name || "";
 
+  console.log({summary, collectionName});
+
   const { control, handleSubmit, setValue, watch, reset } = useForm<ChatForm>({
     defaultValues: {
       input: "",
       messages: [],
     },
   });
+
 
   const { fields, append, replace } = useFieldArray({
     control,
@@ -67,11 +75,11 @@ const ChatBox = ({
   const messages = watch("messages");
 
   useEffect(() => {
-    const chatData = restoreChat();
+    const chatData = restoreChat(collectionName);
     if (chatData) {
       replace(chatData);
     }
-  }, []);
+  }, [collectionName]);
 
   useEffect(() => {
     if (collectionName && messages.length > 0) {

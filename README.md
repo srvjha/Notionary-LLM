@@ -59,10 +59,14 @@ Before you begin, ensure you have the following installed:
    ```
 
 3. **Environment Setup**
-   Create a `.env.local` file in the root directory:
+   Create a `.env` file in the root directory:
    ```bash
    # Add your environment variables
-   NEXT_PUBLIC_API_URL=http://localhost:3000
+   OPENAI_API_KEY=your_openai_key
+   GEMINI_API_KEY=your_gemini_key
+   QDRANT_API_KEY=your_qdrant_key
+   QDRANT_URL=your_qdrant_url
+   QDRANT_HOST=your_qdrant_host
    # Add other required API keys or configuration
    ```
 

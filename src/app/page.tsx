@@ -12,7 +12,7 @@ export default function Home() {
     name: "",
     summary: "",
   });
-
+   
   return (
     <div className=" max-w-7xl mx-auto mt-5">
       <div className="flex gap-4 min-h-[85vh] ">
