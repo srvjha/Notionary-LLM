@@ -51,7 +51,10 @@ export default function UploadSourcesModal({
   const [websiteUrl, setWebsiteUrl] = useState("");
   const [copiedText, setCopiedText] = useState("");
   const [collectionName, setCollectionName] = useState("");
-  const [textError, setTextError] = useState("");
+  const [textError, setTextError] = useState({
+    website: "",
+    copiedText: "",
+  });
 
   const handleFiles = useCallback(
     (fileList: FileList | null) => {
@@ -68,19 +71,25 @@ export default function UploadSourcesModal({
 
   const handleWebsiteUpload = () => {
     if (!websiteUrl) return;
+    const websiteRegex = /^(https?:\/\/)?(www\.)?([a-z0-9-]+\.)+[a-z]{2,6}(\/[^\s]*)?$/i;
+    if (!websiteRegex.test(websiteUrl)) {
+      setTextError((prev) => ({ ...prev, website: "Invalid website URL." }));
+      return;
+    }
     const formData = new FormData();
     formData.append("website", websiteUrl);
     onWebsiteClick?.(formData);
     onOpenChange?.(false);
+    setTextError((prev) => ({ ...prev, website: "" }));
   };
 
   const handleCopiedTextUpload = () => {
     if (copiedText.length > 25000) {
-      setTextError("Text should be 25000 characters or less.");
+      setTextError((prev) => ({ ...prev, copiedText: "Text should be 25000 characters or less." }));
       return;
     }
     if (!collectionName) {
-      setTextError("Collection name is required.");
+      setTextError((prev) => ({ ...prev, collectionName: "Collection name is required." }));
       return;
     }
     const formData = new FormData();
@@ -88,7 +97,7 @@ export default function UploadSourcesModal({
     formData.append("collectionName", collectionName);
     onCopiedTextClick?.(formData);
     onOpenChange?.(false);
-    setTextError("");
+    setTextError((prev) => ({ ...prev, copiedText: "" }));
   };
 
   const onDrop = (e: React.DragEvent<HTMLDivElement>) => {
@@ -187,6 +196,9 @@ export default function UploadSourcesModal({
               onChange={(e) => setWebsiteUrl(e.target.value)}
             />
             <Button onClick={handleWebsiteUpload}>Upload</Button>
+            {textError["website"] && (
+              <p className="text-sm text-red-500">{textError["website"]}</p>
+            )}
           </div>
         )}
 
@@ -204,8 +216,8 @@ export default function UploadSourcesModal({
               onChange={(e) => setCollectionName(e.target.value)}
               required
             />
-            {textError && (
-              <p className="text-sm text-red-500">{textError}</p>
+            {textError["copiedText"] && (
+              <p className="text-sm text-red-500">{textError["copiedText"]}</p>
             )}
             <Button onClick={handleCopiedTextUpload}>Upload</Button>
           </div>

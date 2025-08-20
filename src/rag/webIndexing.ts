@@ -7,11 +7,15 @@ import { GoogleGenerativeAIEmbeddings } from "@langchain/google-genai";
 
 const visited = new Set();
 const urlsToIndex: string[] = [];
+let domain = "";
 
 /**
  * Crawl website recursively to collect URLs
  */
 async function crawl(url: string, depth = 0, maxDepth = 1) {
+  if (depth === 0) {
+    domain = new URL(url).hostname;
+  }
   if (visited.has(url) || depth > maxDepth) return;
   visited.add(url);
 
@@ -26,14 +30,16 @@ async function crawl(url: string, depth = 0, maxDepth = 1) {
     const links = $("a[href]")
       .map((_, el) => {
         const href = $(el).attr("href");
-        if (!href) return null; // skip undefined
+        if (!href) return null;
         return new URL(href, url).toString();
       })
       .get()
-      .filter((link): link is string => link !== null); // type guard to remove nulls
+      .filter((link): link is string => link !== null); 
 
     for (const link of links) {
-      await crawl(link, depth + 1, maxDepth);
+      if (link.includes(domain)) {
+        await crawl(link, depth + 1, maxDepth);
+      }
     }
   } catch (err: any) {
     console.error("Failed to crawl:", url, err.message);
@@ -88,15 +94,16 @@ export const webIndexing = async (startUrl: string, collectionName: string) => {
   );
 
   // Store in Qdrant
-  const vectorStore = await QdrantVectorStore.fromDocuments(
-    allDocs,
-    embeddings,
-    {
+  const BATCH_SIZE = 1000;
+  for (let i = 0; i < allDocs.length; i += BATCH_SIZE) {
+    const batch = allDocs.slice(i, i + BATCH_SIZE);
+    await QdrantVectorStore.fromDocuments(batch, embeddings, {
       url: process.env.QDRANT_URL,
       apiKey: process.env.QDRANT_API_KEY,
-      collectionName: collectionName,
-    }
-  );
+      collectionName,
+    });
+    console.log(`✅ Inserted batch ${i / BATCH_SIZE + 1}`);
+  }
 
   console.log("🎉 Indexing complete! Stored in Qdrant.");
   return true;
