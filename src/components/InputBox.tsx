@@ -131,9 +131,9 @@ const InputBox = ({
   };
 
   const handleCopiedText = async (formData: FormData) => {
-    const copiedText = formData.get("copiedText");
-    const titleKey =
-      typeof copiedText === "string" ? copiedText : `Text ${Date.now()}`;
+   ;
+    const collectionName = formData.get("collectionName") as string;
+    const titleKey = collectionName ;
 
     upsertTitle(titleKey);
     setUploadingTitle(titleKey);

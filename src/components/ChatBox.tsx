@@ -13,35 +13,35 @@ interface ChatForm {
   messages: { role: "user" | "bot"; text: string }[];
 }
 
-const STORAGE_PREFIX = "chat_history_";
+// const STORAGE_PREFIX = "chat_history_";
 
-function getCollectionFromTitle(title: string): string | null {
+// function getCollectionFromTitle(title: string): string | null {
   
-  let parsed = title;
-  console.log({parsed})
-  for (let i = 0; i < localStorage.length; i++) {
-    const key = localStorage.key(i) || "";
-    let fileName = key.replace(STORAGE_PREFIX, "").trim();
-    console.log({fileName, key})
-    if (JSON.stringify(parsed) === JSON.stringify(fileName)) {
-      return key;
-    }
-  }
-  return null;
-}
-function restoreChat(collectionName: string) {
-  const savedTitles = collectionName;
-  console.log({savedTitles});
+//   let parsed = title;
+//   console.log({parsed})
+//   for (let i = 0; i < localStorage.length; i++) {
+//     const key = localStorage.key(i) || "";
+//     let fileName = key.replace(STORAGE_PREFIX, "").trim();
+//     console.log({fileName, key})
+//     if (JSON.stringify(parsed) === JSON.stringify(fileName)) {
+//       return key;
+//     }
+//   }
+//   return null;
+// }
+// function restoreChat(collectionName: string) {
+//   const savedTitles = collectionName;
+//   console.log({savedTitles});
 
-  if (!savedTitles) return null;
+//   if (!savedTitles) return null;
 
-  const matchedCollectionKey = getCollectionFromTitle(savedTitles);
-  if (!matchedCollectionKey) return null;
+//   const matchedCollectionKey = getCollectionFromTitle(savedTitles);
+//   if (!matchedCollectionKey) return null;
 
-  const savedChat = localStorage.getItem(matchedCollectionKey);
-  console.log({matchedCollectionKey, savedChat});
-  return savedChat ? JSON.parse(savedChat) : null;
-}
+//   const savedChat = localStorage.getItem(matchedCollectionKey);
+//   console.log({matchedCollectionKey, savedChat});
+//   return savedChat ? JSON.parse(savedChat) : null;
+// }
 
 const ChatBox = ({
   open,
@@ -74,21 +74,22 @@ const ChatBox = ({
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messages = watch("messages");
 
-  useEffect(() => {
-    const chatData = restoreChat(collectionName);
-    if (chatData) {
-      replace(chatData);
-    }
-  }, [collectionName]);
+ useEffect(() => {
+  reset({
+    input: "",
+    messages: [],
+  });
+}, [collectionName]);
 
-  useEffect(() => {
-    if (collectionName && messages.length > 0) {
-      localStorage.setItem(
-        STORAGE_PREFIX + collectionName,
-        JSON.stringify(messages)
-      );
-    }
-  }, [messages, collectionName]);
+
+  // useEffect(() => {
+  //   if (collectionName && messages.length > 0) {
+  //     localStorage.setItem(
+  //       STORAGE_PREFIX + collectionName,
+  //       JSON.stringify(messages)
+  //     );
+  //   }
+  // }, [messages, collectionName]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -121,7 +122,7 @@ const ChatBox = ({
       </div>
 
       {/* Chat Area */}
-      {!summary && messages.length === 0 ? (
+      {!summary && messages.length===0 ? (
         <div
           className="flex-1 flex flex-col items-center justify-center text-center p-4"
           onClick={() => setOpen(true)}

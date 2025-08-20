@@ -3,7 +3,7 @@
 A sophisticated **Retrieval Augmented Generation (RAG)** web application that transforms your documents, websites, and text into an intelligent, queryable knowledge base. Upload your content and chat with your data using advanced AI-powered responses with full context awareness.
 
 [![Demo](https://img.shields.io/badge/🌐_Live_Demo-notecast.srvjha.in-blue)](https://notecast.srvjha.in/)
-[![Video Demo](https://img.shields.io/badge/📺_YouTube-Demo_Video-red)](https://youtu.be/jkEWwFz5X_A)
+[![Video Demo](https://img.shields.io/badge/📺_YouTube-Demo_Video-red)](https://youtu.be/ctOAPrMxJY0)
 [![GitHub](https://img.shields.io/badge/📁_Source-GitHub_Repo-black)](https://github.com/srvjha/notecast)
 
 ---
