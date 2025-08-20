@@ -16,7 +16,7 @@ interface ChatForm {
 // const STORAGE_PREFIX = "chat_history_";
 
 // function getCollectionFromTitle(title: string): string | null {
-  
+
 //   let parsed = title;
 //   console.log({parsed})
 //   for (let i = 0; i < localStorage.length; i++) {
@@ -55,7 +55,7 @@ const ChatBox = ({
   const summary = pdf?.summary || "";
   const collectionName = pdf?.name || "";
 
-  console.log({summary, collectionName});
+  console.log({ summary, collectionName });
 
   const { control, handleSubmit, setValue, watch, reset } = useForm<ChatForm>({
     defaultValues: {
@@ -63,7 +63,6 @@ const ChatBox = ({
       messages: [],
     },
   });
-
 
   const { fields, append, replace } = useFieldArray({
     control,
@@ -74,13 +73,12 @@ const ChatBox = ({
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messages = watch("messages");
 
- useEffect(() => {
-  reset({
-    input: "",
-    messages: [],
-  });
-}, [collectionName]);
-
+  useEffect(() => {
+    reset({
+      input: "",
+      messages: [],
+    });
+  }, [collectionName]);
 
   // useEffect(() => {
   //   if (collectionName && messages.length > 0) {
@@ -117,12 +115,26 @@ const ChatBox = ({
   return (
     <div className="w-full h-full flex flex-col text-white rounded-xl shadow-lg">
       {/* Header */}
-      <div className="p-4 border-b border-neutral-800">
+      <div className="p-4 border-b border-neutral-800 flex justify-between items-center">
         <p className="text-lg font-semibold">Chat</p>
+        {messages.length > 0 && (
+          <Button
+            variant="destructive"
+            className="cursor-pointer "
+            onClick={() =>
+              reset({
+                input: "",
+                messages: [],
+              })
+            }
+          >
+            Clear Chat
+          </Button>
+        )}
       </div>
 
       {/* Chat Area */}
-      {!summary && messages.length===0 ? (
+      {!summary && messages.length === 0 ? (
         <div
           className="flex-1 flex flex-col items-center justify-center text-center p-4"
           onClick={() => setOpen(true)}

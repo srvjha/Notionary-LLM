@@ -11,10 +11,10 @@ export const Header = () => {
     <header className="w-full shadow-sm bg-white dark:bg-[#171717]/50 sticky top-0 z-50">
       <div className="max-w-7xl mx-auto flex items-center justify-between px-6 py-3">
         <div className="flex items-center gap-2">
-          <BookOpen className="w-6 h-6 text-cyan-300 dark:text-neutral-300 mt-1" />
-          <h1 className="text-xl font-bold text-gray-900 dark:text-white">
-            notecast
-          </h1>
+          <img src="/favicon.ico" alt="Logo" className="w-9 h-9" />
+          <Link href="/" className="text-xl font-bold text-gray-900 dark:text-white">
+            Notecast
+          </Link>
         </div>
 
         <div className="flex items-center gap-6">
