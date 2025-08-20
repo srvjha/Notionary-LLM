@@ -227,7 +227,7 @@ const InputBox = ({
             ) : selectedTitle === title ? (
               <CheckCircle2 size={20} />
             ) : (
-              <ClipLoader size={20} color="white" />
+              <SquarePen size={20} color="white" />
             )}
             <div className="flex justify-between w-full">
               <span className="truncate">{title}</span>
