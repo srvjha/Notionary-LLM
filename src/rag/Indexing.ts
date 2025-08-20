@@ -24,7 +24,6 @@ export const indexing = async (pdf: File,collectionName:string) => {
     collectionName,
   });
 
-  console.log({ vectorStore });
 
   return true
 };

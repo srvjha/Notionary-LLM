@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Button } from "./ui/button";
 import {
   FileCheck,
@@ -18,7 +18,7 @@ import {
 import { ClipLoader } from "react-spinners";
 
 type SummaryData = { name: string; summary: string };
-type SummaryMap = Record<string, SummaryData>; // key = displayed title string
+type SummaryMap = Record<string, SummaryData>;
 
 const STORAGE_TITLES = "titles";
 const STORAGE_SUMMARIES = "SummaryDetailsMap";
@@ -50,21 +50,33 @@ const InputBox = ({
     useUploadWebsiteMutation();
   const [uploadText, { isLoading: isLoadingText }] = useUploadTextMutation();
   const isLoading = isLoadingPdf || isLoadingWebsite || isLoadingText;
-  
 
   const [titles, setTitles] = useState<string[]>([]);
   const [selectedTitle, setSelectedTitle] = useState<string | null>(null);
+  const [isInitialized, setIsInitialized] = useState(false);
+  const [uploadingTitle, setUploadingTitle] = useState<string | null>(null);
 
-  // Load saved titles
   useEffect(() => {
     const storedTitles = localStorage.getItem(STORAGE_TITLES);
-    if (storedTitles) setTitles(JSON.parse(storedTitles));
+    if (storedTitles) {
+      try {
+        const parsedTitles = JSON.parse(storedTitles);
+        if (Array.isArray(parsedTitles)) {
+          setTitles(parsedTitles);
+        }
+      } catch (error) {
+        console.error("Error parsing stored titles:", error);
+      }
+    }
+    setIsInitialized(true);
   }, []);
 
-  // Save titles whenever they change
+  // Save titles whenever they change (but only after initialization)
   useEffect(() => {
-    localStorage.setItem(STORAGE_TITLES, JSON.stringify(titles));
-  }, [titles]);
+    if (isInitialized) {
+      localStorage.setItem(STORAGE_TITLES, JSON.stringify(titles));
+    }
+  }, [titles, isInitialized]);
 
   const upsertTitle = (titleKey: string) => {
     setTitles((prev) => (prev.includes(titleKey) ? prev : [...prev, titleKey]));
@@ -76,6 +88,7 @@ const InputBox = ({
       pdfFile instanceof File ? pdfFile.name : `PDF ${Date.now()}`;
 
     upsertTitle(titleKey);
+    setUploadingTitle(titleKey);
 
     try {
       const response = await uploadPdf(formData).unwrap();
@@ -88,6 +101,8 @@ const InputBox = ({
       onUploadSuccess(summaryData);
     } catch (error) {
       console.error("Error uploading files:", error);
+    } finally {
+      setUploadingTitle(null);
     }
   };
 
@@ -97,6 +112,7 @@ const InputBox = ({
       typeof websiteUrl === "string" ? websiteUrl : `Website ${Date.now()}`;
 
     upsertTitle(titleKey);
+    setUploadingTitle(titleKey);
 
     try {
       const response = await uploadWebsite(formData).unwrap();
@@ -109,6 +125,8 @@ const InputBox = ({
       onUploadSuccess(summaryData);
     } catch (error) {
       console.error("Error uploading website:", error);
+    } finally {
+      setUploadingTitle(null);
     }
   };
 
@@ -118,6 +136,7 @@ const InputBox = ({
       typeof copiedText === "string" ? copiedText : `Text ${Date.now()}`;
 
     upsertTitle(titleKey);
+    setUploadingTitle(titleKey);
 
     try {
       const response = await uploadText(formData).unwrap();
@@ -130,16 +149,19 @@ const InputBox = ({
       onUploadSuccess(summaryData);
     } catch (error) {
       console.error("Error uploading text:", error);
+    } finally {
+      setUploadingTitle(null);
     }
   };
 
-  // Click title -> load its own summary 
+  // Click title -> load its own summary
   const handleTitleClick = (title: string) => {
     setSelectedTitle(title);
     const map = getSummaryMap();
     const data = map[title];
     if (data) onUploadSuccess(data);
   };
+
   const deleteSummaryFor = (titleKey: string) => {
     const map = getSummaryMap();
     delete map[titleKey];
@@ -152,6 +174,10 @@ const InputBox = ({
     if (selectedTitle === title) {
       setSelectedTitle(null);
     }
+    onUploadSuccess({
+      name: "",
+      summary: "",
+    });
   };
 
   return (
@@ -172,7 +198,7 @@ const InputBox = ({
                 : "bg-neutral-900 text-neutral-100"
             }`}
           >
-            {isLoading ? (
+            {uploadingTitle === title ? (
               <ClipLoader size={20} color="white" />
             ) : selectedTitle === title ? (
               <CheckCircle2 size={20} />
@@ -184,7 +210,10 @@ const InputBox = ({
               <Trash
                 size={20}
                 className="text-neutral-200 hover:text-red-500 cursor-pointer"
-                onClick={() => handleDelete(title)}
+                onClick={(e) => {
+                  e.stopPropagation(); // Prevent title click when deleting
+                  handleDelete(title);
+                }}
               />
             </div>
           </div>

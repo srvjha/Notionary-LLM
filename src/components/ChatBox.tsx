@@ -28,6 +28,7 @@ function getCollectionFromTitle(title: string): string | null {
 }
 function restoreChat() {
   const savedTitles = localStorage.getItem("titles");
+
   if (!savedTitles) return null;
 
   const matchedCollectionKey = getCollectionFromTitle(savedTitles);
