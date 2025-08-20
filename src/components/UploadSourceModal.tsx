@@ -260,20 +260,7 @@ export default function UploadSourcesModal({
           </div>
         )}
 
-        {/* Website */}
-        {popUpContent.website && (
-          <div className="flex flex-col gap-2">
-            <Input
-              placeholder="Paste your Website URL"
-              value={websiteUrl}
-              onChange={(e) => setWebsiteUrl(e.target.value)}
-            />
-            <Button onClick={handleWebsiteUpload}>Upload</Button>
-            {textError["website"] && (
-              <p className="text-sm text-red-500">{textError["website"]}</p>
-            )}
-          </div>
-        )}
+       
 
         {/* Bottom buttons */}
         <div className="grid grid-cols-2 gap-4 mt-4">
