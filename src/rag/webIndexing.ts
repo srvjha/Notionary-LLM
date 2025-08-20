@@ -24,6 +24,7 @@ async function crawl(url: string, depth = 0, maxDepth = 1) {
     const $ = cheerio.load(data);
 
     // Save this URL for indexing
+    console.log({url})
     urlsToIndex.push(url);
 
     // Extract links

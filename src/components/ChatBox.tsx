@@ -16,12 +16,12 @@ interface ChatForm {
 const STORAGE_PREFIX = "chat_history_";
 
 function getCollectionFromTitle(title: string): string | null {
-   let parsed = JSON.parse(title);
+  let parsed = JSON.parse(title);
   for (let i = 0; i < localStorage.length; i++) {
     const key = localStorage.key(i) || "";
-   let fileName = key.replace("chat_history_", "");
+    let fileName = key.replace("chat_history_", "");
     if (parsed.includes(fileName)) {
-      return key; 
+      return key;
     }
   }
   return null;
@@ -65,22 +65,18 @@ const ChatBox = ({
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messages = watch("messages");
 
-useEffect(() => {
-  const chatData = restoreChat();
-  if (chatData) {
-    replace(chatData); 
-  }
-}, []);
+  useEffect(() => {
+    const chatData = restoreChat();
+    if (chatData) {
+      replace(chatData);
+    }
+  }, []);
 
- 
   useEffect(() => {
     if (collectionName && messages.length > 0) {
       localStorage.setItem(
         STORAGE_PREFIX + collectionName,
-        JSON.stringify({
-          messages,
-          summary
-        })
+        JSON.stringify(messages)
       );
     }
   }, [messages, collectionName]);
