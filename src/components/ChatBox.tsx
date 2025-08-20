@@ -151,7 +151,16 @@ const ChatBox = ({
           style={{ maxHeight: "420px" }}
         >
           {messages.length === 0 && (
-            <p className="text-base text-neutral-500 mb-4">{summary}</p>
+            <div className="text-base text-neutral-500 mb-4">
+              {
+                 isMarkdown(summary) ? (
+                    <ReactMarkdown>{summary}</ReactMarkdown>
+                  ) : (
+                    <p>{summary}</p>
+                  )
+              }
+              
+            </div>
           )}
 
           {fields.map((msg) => (

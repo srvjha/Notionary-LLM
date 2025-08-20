@@ -14,6 +14,7 @@ import {
   useUploadPdfMutation,
   useUploadTextMutation,
   useUploadWebsiteMutation,
+  useUploadYoutubeMutation,
 } from "@/services/pdfApi";
 import { ClipLoader } from "react-spinners";
 
@@ -49,7 +50,7 @@ const InputBox = ({
   const [uploadWebsite, { isLoading: isLoadingWebsite }] =
     useUploadWebsiteMutation();
   const [uploadText, { isLoading: isLoadingText }] = useUploadTextMutation();
-  const isLoading = isLoadingPdf || isLoadingWebsite || isLoadingText;
+  const [uploadYoutube, { isLoading: isLoadingYoutube }] = useUploadYoutubeMutation();
 
   const [titles, setTitles] = useState<string[]>([]);
   const [selectedTitle, setSelectedTitle] = useState<string | null>(null);
@@ -131,7 +132,6 @@ const InputBox = ({
   };
 
   const handleCopiedText = async (formData: FormData) => {
-   ;
     const collectionName = formData.get("collectionName") as string;
     const titleKey = collectionName ;
 
@@ -149,6 +149,30 @@ const InputBox = ({
       onUploadSuccess(summaryData);
     } catch (error) {
       console.error("Error uploading text:", error);
+    } finally {
+      setUploadingTitle(null);
+    }
+  };
+
+  const handleYoutubeText = async (formData: FormData) => {
+    const youtubeUrl = formData.get("youtube");
+    const titleKey =
+      typeof youtubeUrl === "string" ? youtubeUrl : `YouTube ${Date.now()}`;
+
+    upsertTitle(titleKey);
+    setUploadingTitle(titleKey);
+
+    try {
+      const response = await uploadYoutube(formData).unwrap();
+      const summaryData: SummaryData = {
+        name: response.collectionName,
+        summary: response.summary,
+      };
+      saveSummaryFor(titleKey, summaryData);
+      setSelectedTitle(titleKey);
+      onUploadSuccess(summaryData);
+    } catch (error) {
+      console.error("Error uploading website:", error);
     } finally {
       setUploadingTitle(null);
     }
@@ -203,7 +227,7 @@ const InputBox = ({
             ) : selectedTitle === title ? (
               <CheckCircle2 size={20} />
             ) : (
-              <SquarePen size={20} />
+              <ClipLoader size={20} color="white" />
             )}
             <div className="flex justify-between w-full">
               <span className="truncate">{title}</span>
@@ -240,6 +264,7 @@ const InputBox = ({
           onFilesSelected={handleFilesSelected}
           onWebsiteClick={handleWebsite}
           onCopiedTextClick={handleCopiedText}
+          onYoutubeClick={handleYoutubeText}
           open={open}
           onOpenChange={setOpen}
         />

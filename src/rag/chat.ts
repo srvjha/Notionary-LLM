@@ -36,7 +36,7 @@ export const chat = async (userQuery: string, collectionName: string) => {
     `;
 
   const response = await client.chat.completions.create({
-    model: "gpt-4.1",
+    model: "gpt-4o-mini",
     messages: [
       { role: "system", content: SYSTEM_PROMPT },
       { role: "user", content: userQuery },

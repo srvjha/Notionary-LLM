@@ -5,6 +5,7 @@ import {
   Link as LinkIcon,
   ClipboardList,
   PlusCircle,
+  Youtube,
 } from "lucide-react";
 import {
   Dialog,
@@ -22,6 +23,7 @@ type UploadSourcesModalProps = {
   onFilesSelected?: (formdata: FormData) => void;
   onWebsiteClick?: (formdata: FormData) => void;
   onCopiedTextClick?: (formdata: FormData) => void;
+  onYoutubeClick?: (formdata: FormData) => void;
   accept?: string;
   multiple?: boolean;
   open?: boolean;
@@ -35,6 +37,7 @@ export default function UploadSourcesModal({
   onFilesSelected,
   onWebsiteClick,
   onCopiedTextClick,
+  onYoutubeClick,
   accept = defaultAccept,
   multiple = true,
   open,
@@ -46,14 +49,17 @@ export default function UploadSourcesModal({
     uploadFile: true,
     website: false,
     copiedText: false,
+    youtube: false,
   });
 
   const [websiteUrl, setWebsiteUrl] = useState("");
   const [copiedText, setCopiedText] = useState("");
+  const [youtubeUrl, setYoutubeUrl] = useState("");
   const [collectionName, setCollectionName] = useState("");
   const [textError, setTextError] = useState({
     website: "",
     copiedText: "",
+    youtube: "",
   });
 
   const handleFiles = useCallback(
@@ -81,6 +87,20 @@ export default function UploadSourcesModal({
     onWebsiteClick?.(formData);
     onOpenChange?.(false);
     setTextError((prev) => ({ ...prev, website: "" }));
+  };
+
+  const handleYoutubeUpload = () => {
+    if (!youtubeUrl) return;
+    const youtubeRegex = /^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.?be)\/.+$/i;
+    if (!youtubeRegex.test(youtubeUrl)) {
+      setTextError((prev) => ({ ...prev, youtube: "Invalid YouTube URL." }));
+      return;
+    }
+    const formData = new FormData();
+    formData.append("youtube", youtubeUrl);
+    onYoutubeClick?.(formData);
+    onOpenChange?.(false);
+    setTextError((prev) => ({ ...prev, youtube: "" }));
   };
 
   const handleCopiedTextUpload = () => {
@@ -120,11 +140,13 @@ export default function UploadSourcesModal({
   };
 
   const handleUploadClick = () =>
-    setPopUpContent({ uploadFile: true, website: false, copiedText: false });
+    setPopUpContent({ uploadFile: true, website: false, copiedText: false , youtube: false });
   const handleWebsiteClick = () =>
-    setPopUpContent({ uploadFile: false, website: true, copiedText: false });
+    setPopUpContent({ uploadFile: false, website: true, copiedText: false , youtube: false });
   const handleCopiedTextClick = () =>
-    setPopUpContent({ uploadFile: false, website: false, copiedText: true });
+    setPopUpContent({ uploadFile: false, website: false, copiedText: true , youtube: false });
+  const handleYoutubeTextClick = () =>
+    setPopUpContent({ uploadFile: false, website: false, copiedText: false , youtube: true });
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -223,18 +245,48 @@ export default function UploadSourcesModal({
           </div>
         )}
 
+         {/* Youtube */}
+        {popUpContent.youtube && (
+          <div className="flex flex-col gap-2">
+            <Input
+              placeholder="Paste your YouTube URL"
+              value={youtubeUrl}
+              onChange={(e) => setYoutubeUrl(e.target.value)}
+            />
+            <Button onClick={handleYoutubeUpload}>Upload</Button>
+            {textError["youtube"] && (
+              <p className="text-sm text-red-500">{textError["youtube"]}</p>
+            )}
+          </div>
+        )}
+
+        {/* Website */}
+        {popUpContent.website && (
+          <div className="flex flex-col gap-2">
+            <Input
+              placeholder="Paste your Website URL"
+              value={websiteUrl}
+              onChange={(e) => setWebsiteUrl(e.target.value)}
+            />
+            <Button onClick={handleWebsiteUpload}>Upload</Button>
+            {textError["website"] && (
+              <p className="text-sm text-red-500">{textError["website"]}</p>
+            )}
+          </div>
+        )}
+
         {/* Bottom buttons */}
-        <div className="grid grid-cols-3 gap-4 mt-4">
+        <div className="grid grid-cols-2 gap-4 mt-4">
           <button
             onClick={handleUploadClick}
-            className="flex flex-col items-center justify-center gap-2 p-4 border border-neutral-700 rounded-xl hover:bg-neutral-800/70 active:scale-[0.99] transition"
+            className="flex flex-col items-center justify-center gap-2 cursor-pointer p-4 border border-neutral-700 rounded-xl hover:bg-neutral-800/70 active:scale-[0.99] transition"
           >
             <PlusCircle className="w-6 h-6" />
             <span className="text-sm">Upload File</span>
           </button>
           <button
             onClick={handleWebsiteClick}
-            className="flex flex-col items-center justify-center gap-2 p-4 border border-neutral-700 rounded-xl hover:bg-neutral-800/70 active:scale-[0.99] transition"
+            className="flex flex-col items-center justify-center gap-2 cursor-pointer p-4 border border-neutral-700 rounded-xl hover:bg-neutral-800/70 active:scale-[0.99] transition"
           >
             <LinkIcon className="w-6 h-6" />
             <span className="text-sm">Website</span>
@@ -242,10 +294,18 @@ export default function UploadSourcesModal({
 
           <button
             onClick={handleCopiedTextClick}
-            className="flex flex-col items-center justify-center gap-2 p-4 border border-neutral-700 rounded-xl hover:bg-neutral-800/70 active:scale-[0.99] transition"
+            className="flex flex-col items-center justify-center gap-2 cursor-pointer p-4 border border-neutral-700 rounded-xl hover:bg-neutral-800/70 active:scale-[0.99] transition"
           >
             <ClipboardList className="w-6 h-6" />
             <span className="text-sm">Copied text</span>
+          </button>
+
+           <button
+            onClick={handleYoutubeTextClick}
+            className="flex flex-col items-center justify-center gap-2 cursor-pointer p-4 border border-neutral-700 rounded-xl hover:bg-neutral-800/70 active:scale-[0.99] transition"
+          >
+            <Youtube className="w-6 h-6" />
+            <span className="text-sm">YouTube Video</span>
           </button>
         </div>
       </DialogContent>

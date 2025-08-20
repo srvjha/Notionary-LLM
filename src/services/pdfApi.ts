@@ -39,6 +39,14 @@ export const pdfApi = createApi({
       }),
     }),
 
+    uploadYoutube: builder.mutation<UploadResponse, FormData>({
+      query: (formData) => ({
+        url: "ytIndexing", // /api/ytIndexing
+        method: "POST",
+        body: formData,
+      }),
+    }),
+
     chatWithPdf: builder.mutation<ChatResponse, { userQuery: string; collectionName: string }>({
       query: (body) => ({
         url: "chat", // /api/chat
@@ -49,4 +57,4 @@ export const pdfApi = createApi({
   }),
 });
 
-export const { useUploadPdfMutation, useUploadWebsiteMutation, useUploadTextMutation, useChatWithPdfMutation } = pdfApi;
+export const { useUploadPdfMutation, useUploadWebsiteMutation, useUploadTextMutation, useUploadYoutubeMutation, useChatWithPdfMutation } = pdfApi;

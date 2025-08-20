@@ -1,9 +1,8 @@
 import { PDFLoader } from "@langchain/community/document_loaders/fs/pdf";
 import { GoogleGenerativeAIEmbeddings } from "@langchain/google-genai";
-import { OpenAIEmbeddings } from "@langchain/openai";
 import { QdrantVectorStore } from "@langchain/qdrant";
 
-export const indexing = async (pdf: File,collectionName:string) => {
+export const indexing = async (pdf: File, collectionName:string) => {
   const loader = new PDFLoader(pdf);
 
   //page by page load the pdf file
