@@ -1,34 +1,40 @@
-import { chat } from "@/rag/chat";
+import { indexing } from "@/rag/Indexing";
 import { webIndexing } from "@/rag/webIndexing";
+import { ApiError } from "@/utils/ApiError";
+import { ApiResponse } from "@/utils/ApiResponse";
+import {
+  validatePDFIndexing,
+  validateWebsiteIndexing,
+} from "@/validators/indexingApi.validator";
 import { NextResponse, NextRequest } from "next/server";
 
 export async function POST(req: NextRequest) {
   const formData = await req.formData();
   const website = formData.get("website") as string;
-  const collectionName =
-    website
-      ? website.replace("https://", "").replace("http://", "").replace(/\//g, "_")
-      : `PDF-${Date.now() + Math.floor(Math.random() * 1000)}`;
-  if (!website) {
-    return NextResponse.json(
-      { error: "No website URL provided" },
-      { status: 400 }
+  const userSessionId = req?.headers.get("x-user-session");
+  if (!userSessionId) {
+    throw new ApiError("x-user-session header is required", 400);
+  }
+  const validations = validateWebsiteIndexing({ url: website, userSessionId });
+  if (!validations.success) {
+    throw new ApiError(
+      `Invalid website indexing data ${validations.error}`,
+      400
     );
   }
-  const doIndexing = await webIndexing(website, collectionName);
-  if (!doIndexing) {
-    return NextResponse.json({ error: "Indexing Failed ❌" }, { status: 500 });
+  const indexingFileId = await webIndexing(website, userSessionId);
+  if (!indexingFileId) {
+    throw new ApiError("Indexing Failed ❌", 500);
   }
 
-  const modelResponse = await chat("Summarize the content", collectionName);
   return NextResponse.json(
-    {
-      message: "Chat Fetched Successfully",
-      summary: modelResponse,
-      collectionName,
-      success: true,
-    },
+    new ApiResponse(
+      200,
+      {
+        fileId: indexingFileId,
+      },
+      "Website Indexing Successfully ✅"
+    ),
     { status: 200 }
   );
 }
-

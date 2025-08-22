@@ -1,37 +1,45 @@
 // api/pdfApi.ts
+import { APIResponse, ChatUploadType } from "@/types/chat.type";
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
+import { v4 as uuidv4 } from "uuid";
 
-interface UploadResponse {
-  message: string;
-  summary: string;
-  collectionName: string;
-}
-
-interface ChatResponse {
-  message: string;
-  reply: string;
-  success: boolean;
+let sessionId: string | null = null;
+if (typeof window !== "undefined") {
+  sessionId = localStorage.getItem("userSessionId");
+  if (!sessionId) {
+    sessionId = uuidv4();
+    localStorage.setItem("userSessionId", sessionId);
+  }
 }
 
 export const pdfApi = createApi({
   reducerPath: "pdfApi",
-  baseQuery: fetchBaseQuery({ baseUrl: "/api" }), // Next.js API routes
+  baseQuery: fetchBaseQuery({
+    baseUrl: "/api",
+    prepareHeaders: (headers) => {
+      if (sessionId) {
+        headers.set("x-user-session", sessionId);
+      }
+      return headers;
+    },
+  }),
+
   endpoints: (builder) => ({
-    uploadPdf: builder.mutation<UploadResponse, FormData>({
+    uploadPdf: builder.mutation<APIResponse, FormData>({
       query: (formData) => ({
-        url: "pdfchat", // /api/pdfchat
+        url: "fileIndexing", // /api/fileIndexing
         method: "POST",
         body: formData,
       }),
     }),
-    uploadWebsite: builder.mutation<UploadResponse, FormData>({
+    uploadWebsite: builder.mutation<APIResponse, FormData>({
       query: (formData) => ({
         url: "webIndexing", // /api/webIndexing
         method: "POST",
         body: formData,
       }),
     }),
-     uploadText: builder.mutation<UploadResponse, FormData>({
+    uploadText: builder.mutation<APIResponse, FormData>({
       query: (formData) => ({
         url: "textIndexing", // /api/textIndexing
         method: "POST",
@@ -39,7 +47,7 @@ export const pdfApi = createApi({
       }),
     }),
 
-    uploadYoutube: builder.mutation<UploadResponse, FormData>({
+    uploadYoutube: builder.mutation<APIResponse, FormData>({
       query: (formData) => ({
         url: "ytIndexing", // /api/ytIndexing
         method: "POST",
@@ -47,14 +55,29 @@ export const pdfApi = createApi({
       }),
     }),
 
-    chatWithPdf: builder.mutation<ChatResponse, { userQuery: string; collectionName: string }>({
+    chatWithDocs: builder.mutation<APIResponse, ChatUploadType>({
       query: (body) => ({
         url: "chat", // /api/chat
         method: "POST",
         body,
       }),
     }),
+
+    deleteSource: builder.mutation<APIResponse, { fileID: string }>({
+      query: ({ fileID }) => ({
+        url: "deleteFile", // /api/deleteFile
+        method: "DELETE",
+        body: { fileID },
+      }),
+    }),
   }),
 });
 
-export const { useUploadPdfMutation, useUploadWebsiteMutation, useUploadTextMutation, useUploadYoutubeMutation, useChatWithPdfMutation } = pdfApi;
+export const {
+  useUploadPdfMutation,
+  useUploadWebsiteMutation,
+  useUploadTextMutation,
+  useUploadYoutubeMutation,
+  useChatWithDocsMutation,
+  useDeleteSourceMutation,
+} = pdfApi;

@@ -1,37 +1,36 @@
-import { chat } from "@/rag/chat";
 import { ytIndexing } from "@/rag/ytIndexing";
+import { ApiError } from "@/utils/ApiError";
+import { ApiResponse } from "@/utils/ApiResponse";
+import { validateWebsiteIndexing } from "@/validators/indexingApi.validator";
 import { NextResponse, NextRequest } from "next/server";
-import slugify from 'slugify'
 
 export async function POST(req: NextRequest) {
   const formData = await req.formData();
-  const youtubeURL = formData.get("youtube") as string;
-   if (!youtubeURL) {
-    return NextResponse.json(
-      { error: "No YouTube URL provided" },
-      { status: 400 }
+  const youtube = formData.get("youtube") as string;
+  const userSessionId = req?.headers.get("x-user-session");
+  if (!userSessionId) {
+    throw new ApiError("x-user-session header is required", 400);
+  }
+  const validations = validateWebsiteIndexing({ url: youtube, userSessionId });
+  if (!validations.success) {
+    throw new ApiError(
+      `Invalid website indexing data ${validations.error}`,
+      400
     );
   }
-  // make collection from youtube url
-  const collectionName = slugify(youtubeURL, {
-  replacement: "_", // replace invalid chars with _
-  lower: true,
-  strict: true,     // only letters/numbers/underscore
-});
- 
-  const doIndexing = await ytIndexing(youtubeURL, collectionName);
-  if (!doIndexing) {
-    return NextResponse.json({ error: "Indexing Failed ❌" }, { status: 500 });
+  const indexingFileId = await ytIndexing(youtube, userSessionId);
+  if (!indexingFileId) {
+    throw new ApiError("Indexing Failed ❌", 500);
   }
 
-  const modelResponse = await chat("Summarize the content", collectionName);
   return NextResponse.json(
-    {
-      message: "Chat Fetched Successfully",
-      summary: modelResponse,
-      collectionName,
-      success: true,
-    },
+    new ApiResponse(
+      200,
+      {
+        fileId: indexingFileId,
+      },
+      "Website Indexing Successfully ✅"
+    ),
     { status: 200 }
   );
 }

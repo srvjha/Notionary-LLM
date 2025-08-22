@@ -3,6 +3,10 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { Header } from "@/components/Header";
 import { Providers } from "./Providers";
+import { Toaster } from 'react-hot-toast';
+import {
+  ClerkProvider
+} from '@clerk/nextjs'
 
 export const metadata: Metadata = {
   title: "Notecast - Your AI-Powered Note-Taking Assistant",
@@ -15,13 +19,16 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
+     <ClerkProvider>
     <html lang="en">
       <body className="dark">
+        <Toaster />
         <Providers>
           <Header />
           {children}
         </Providers>
       </body>
     </html>
+    </ClerkProvider>
   );
 }

@@ -1,10 +1,10 @@
 import { useForm, Controller, useFieldArray } from "react-hook-form";
 import { useEffect, useRef } from "react";
-import { useChatWithPdfMutation } from "@/services/pdfApi";
+import { useChatWithDocsMutation } from "@/services/pdfApi";
 import { BeatLoader } from "react-spinners";
 import ReactMarkdown from "react-markdown";
 import { isMarkdown } from "@/utils/helper";
-import { Upload, Send } from "lucide-react";
+import { Upload, Send, Brain } from "lucide-react";
 import { Input } from "./ui/input";
 import { Button } from "./ui/button";
 
@@ -13,81 +13,38 @@ interface ChatForm {
   messages: { role: "user" | "bot"; text: string }[];
 }
 
-// const STORAGE_PREFIX = "chat_history_";
-
-// function getCollectionFromTitle(title: string): string | null {
-
-//   let parsed = title;
-//   console.log({parsed})
-//   for (let i = 0; i < localStorage.length; i++) {
-//     const key = localStorage.key(i) || "";
-//     let fileName = key.replace(STORAGE_PREFIX, "").trim();
-//     console.log({fileName, key})
-//     if (JSON.stringify(parsed) === JSON.stringify(fileName)) {
-//       return key;
-//     }
-//   }
-//   return null;
-// }
-// function restoreChat(collectionName: string) {
-//   const savedTitles = collectionName;
-//   console.log({savedTitles});
-
-//   if (!savedTitles) return null;
-
-//   const matchedCollectionKey = getCollectionFromTitle(savedTitles);
-//   if (!matchedCollectionKey) return null;
-
-//   const savedChat = localStorage.getItem(matchedCollectionKey);
-//   console.log({matchedCollectionKey, savedChat});
-//   return savedChat ? JSON.parse(savedChat) : null;
-// }
-
-const ChatBox = ({
-  open,
-  setOpen,
-  pdf,
-}: {
-  open: boolean;
+interface ChatBoxProps {
   setOpen: (open: boolean) => void;
-  pdf: { name: string; summary: string } | null;
-}) => {
-  const summary = pdf?.summary || "";
-  const collectionName = pdf?.name || "";
+  setContextCreated: (created: boolean) => void;
+  contextCreated: boolean;
+}
 
-  console.log({ summary, collectionName });
+const USER_CHATHISTORY = "chat_history";
 
-  const { control, handleSubmit, setValue, watch, reset } = useForm<ChatForm>({
+const ChatBox = ({ setOpen,setContextCreated, contextCreated }: ChatBoxProps) => {
+  const { control, handleSubmit, setValue, watch, reset ,getValues} = useForm<ChatForm>({
     defaultValues: {
       input: "",
       messages: [],
     },
   });
 
-  const { fields, append, replace } = useFieldArray({
+  useEffect(() => {
+    const storedChatHistory = localStorage.getItem(USER_CHATHISTORY);
+    if (storedChatHistory) {
+       setContextCreated(true);
+      reset(JSON.parse(storedChatHistory));
+    }
+  }, [reset]);
+
+  const { fields, append, } = useFieldArray({
     control,
     name: "messages",
   });
 
-  const [chatWithPdf, { isLoading }] = useChatWithPdfMutation();
+  const [chatWithDocs, { isLoading }] = useChatWithDocsMutation();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messages = watch("messages");
-
-  useEffect(() => {
-    reset({
-      input: "",
-      messages: [],
-    });
-  }, [collectionName]);
-
-  // useEffect(() => {
-  //   if (collectionName && messages.length > 0) {
-  //     localStorage.setItem(
-  //       STORAGE_PREFIX + collectionName,
-  //       JSON.stringify(messages)
-  //     );
-  //   }
-  // }, [messages, collectionName]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -97,19 +54,24 @@ const ChatBox = ({
     if (!data.input.trim()) return;
 
     append({ role: "user", text: data.input });
+    localStorage.setItem(USER_CHATHISTORY, JSON.stringify(getValues()));
+    setValue("input", "");
 
     try {
-      const response = await chatWithPdf({
+      const response = await chatWithDocs({
         userQuery: data.input,
-        collectionName,
       }).unwrap();
+      if (response.success) {
 
-      append({ role: "bot", text: response.reply });
+        append({ role: "bot", text: response.data.reply });
+        console.log({ values: getValues() });
+        localStorage.setItem(USER_CHATHISTORY, JSON.stringify(getValues()));
+      }
     } catch {
       append({ role: "bot", text: "❌ Error fetching reply" });
+    } finally {
+      setValue("input", "");
     }
-
-    setValue("input", "");
   };
 
   return (
@@ -134,7 +96,7 @@ const ChatBox = ({
       </div>
 
       {/* Chat Area */}
-      {!summary && messages.length === 0 ? (
+      {!contextCreated ? (
         <div
           className="flex-1 flex flex-col items-center justify-center text-center p-4"
           onClick={() => setOpen(true)}
@@ -151,15 +113,14 @@ const ChatBox = ({
           style={{ maxHeight: "420px" }}
         >
           {messages.length === 0 && (
-            <div className="text-base text-neutral-500 mb-4">
-              {
-                 isMarkdown(summary) ? (
-                    <ReactMarkdown>{summary}</ReactMarkdown>
-                  ) : (
-                    <p>{summary}</p>
-                  )
-              }
-              
+            <div className="flex flex-col justify-center items-center h-full text-center text-neutral-400">
+              <Brain className="w-12 h-12 text-indigo-200 mb-3" />
+              <h2 className="text-xl font-semibold text-white">
+                Welcome to Chat
+              </h2>
+              <p className="text-sm text-neutral-500 mt-1">
+                Lets get started by asking a question or uploading a source.
+              </p>
             </div>
           )}
 
@@ -212,19 +173,21 @@ const ChatBox = ({
             <Input
               type="text"
               placeholder={`${
-                !summary ? "Upload file to start chatting" : "Start Typing..."
+                !contextCreated
+                  ? "Upload file to start chatting"
+                  : "Start Typing..."
               }`}
-              className="p-3 bg-neutral-800 text-white border-none focus:ring-2 focus:ring-blue-500 rounded-xl"
+              className="p-5 text-base  bg-neutral-800 text-white border-none focus:ring-2 focus:ring-blue-500 rounded-lg"
               {...field}
-              disabled={!summary || isLoading}
+              disabled={!contextCreated || isLoading}
             />
           )}
         />
         <Button
           size="icon"
           type="submit"
-          disabled={!summary || isLoading}
-          className="bg-blue-600 hover:bg-blue-700 text-white rounded-xl shadow"
+          disabled={isLoading || !contextCreated}
+          className="bg-blue-600 hover:bg-blue-700 text-white rounded-lg shadow"
         >
           <Send className="w-5 h-5" />
         </Button>

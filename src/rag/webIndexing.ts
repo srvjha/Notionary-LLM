@@ -1,111 +1,70 @@
-import axios from "axios";
-import * as cheerio from "cheerio";
-import { URL } from "url";
-import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters";
-import { QdrantVectorStore } from "@langchain/qdrant";
+import { ApiError } from "@/utils/ApiError";
 import { GoogleGenerativeAIEmbeddings } from "@langchain/google-genai";
+import { QdrantVectorStore } from "@langchain/qdrant";
+import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters";
+import crypto from "crypto";
+import { QdrantClient } from "@qdrant/js-client-rest";
+import { RecursiveUrlLoader } from "@langchain/community/document_loaders/web/recursive_url";
+import { compile } from "html-to-text";
+import { OpenAIEmbeddings } from "@langchain/openai";
 
-const visited = new Set();
-const urlsToIndex: string[] = [];
-let domain = "";
+const client = new QdrantClient({
+  url: process.env.QDRANT_URL,
+  apiKey: process.env.QDRANT_API_KEY,
+});
 
-/**
- * Crawl website recursively to collect URLs
- */
-async function crawl(url: string, depth = 0, maxDepth = 1) {
-  if (depth === 0) {
-    domain = new URL(url).hostname;
-  }
-  if (visited.has(url) || depth > maxDepth) return;
-  visited.add(url);
+export const webIndexing = async (url: string, userSessionId: string) => {
+  const compiledConvert = compile({ wordwrap: 130 });
 
-  try {
-    const { data } = await axios.get(url);
-    const $ = cheerio.load(data);
+  const loader = new RecursiveUrlLoader(url, {
+    extractor: compiledConvert,
+    maxDepth: 1,
+    excludeDirs: ["/docs/api/"],
+  });
 
-    // Save this URL for indexing
-    console.log({url})
-    urlsToIndex.push(url);
+  //page by page load the pdf file
+  const docs = await loader.load();
 
-    // Extract links
-    const links = $("a[href]")
-      .map((_, el) => {
-        const href = $(el).attr("href");
-        if (!href) return null;
-        return new URL(href, url).toString();
-      })
-      .get()
-      .filter((link): link is string => link !== null); 
-
-    for (const link of links) {
-      if (link.includes(domain)) {
-        await crawl(link, depth + 1, maxDepth);
-      }
-    }
-  } catch (err: any) {
-    console.error("Failed to crawl:", url, err.message);
-  }
-}
-
-/**
- * Fetch page text
- */
-async function fetchPageText(url: string) {
-  try {
-    const { data } = await axios.get(url);
-    const $ = cheerio.load(data);
-    return $("body").text(); // simple extract, can refine
-  } catch (err: any) {
-    console.error("Failed to fetch:", url, err.message);
-    return "";
-  }
-}
-
-/**
- * Main indexing pipeline
- */
-export const webIndexing = async (startUrl: string, collectionName: string) => {
-  console.log("🚀 Crawling site...");
-  await crawl(startUrl, 0, 1); // maxDepth=1 → subpages, increase if needed
-  console.log(`✅ Found ${urlsToIndex.length} URLs`);
-
-  const splitter = new RecursiveCharacterTextSplitter({
-    chunkSize: 1000,
+  const textSplitter = new RecursiveCharacterTextSplitter({
+    chunkSize: 2000,
     chunkOverlap: 200,
   });
+  console.log({textSplitter})
+  const splitDocs = await textSplitter.splitDocuments(docs);
+  console.log({splitDocs})
+  if (!splitDocs || splitDocs.length === 0) {
+    // return res.status(400).json({ error: 'No content could be extracted from the file' });
+    throw new ApiError("No content could be extracted from the file", 400);
+  }
 
-  const embeddings = new GoogleGenerativeAIEmbeddings({
-    apiKey: process.env.GEMINI_API_KEY,
-    model: "models/embedding-001", // Correct Gemini embeddings model
+  const fileID = crypto.randomBytes(5).toString("hex");
+  const newDocs = await splitDocs.map((chunk) => ({
+    ...chunk,
+    metadata: {
+      ...chunk.metadata,
+      fileID,
+    },
+  }));
+
+  // ready the openAI embedding model
+   const embeddings = new OpenAIEmbeddings({
+    model: "text-embedding-3-large",
+  });
+  // const embeddings = new GoogleGenerativeAIEmbeddings({
+  //   apiKey: process.env.GEMINI_API_KEY,
+  //   model: "models/embedding-001",
+  // });
+
+  await QdrantVectorStore.fromDocuments(newDocs, embeddings, {
+    url: process.env.QDRANT_URL,
+    apiKey: process.env.QDRANT_API_KEY,
+    collectionName: `notecast-${userSessionId}`,
   });
 
-  let allDocs: any[] = [];
+  await client.createPayloadIndex(`notecast-${userSessionId}`, {
+    field_name: "fileID",
+    field_schema: { type: "keyword" },
+  });
 
-  for (const url of urlsToIndex) {
-    const text = await fetchPageText(url);
-    if (!text) continue;
-
-    // Split into chunks
-    const docs = await splitter.createDocuments([text], [{ url }]);
-    allDocs = allDocs.concat(docs);
-  }
-
-  console.log(
-    `📖 Created ${allDocs.length} chunks from ${urlsToIndex.length} pages`
-  );
-
-  // Store in Qdrant
-  const BATCH_SIZE = 1000;
-  for (let i = 0; i < allDocs.length; i += BATCH_SIZE) {
-    const batch = allDocs.slice(i, i + BATCH_SIZE);
-    await QdrantVectorStore.fromDocuments(batch, embeddings, {
-      url: process.env.QDRANT_URL,
-      apiKey: process.env.QDRANT_API_KEY,
-      collectionName,
-    });
-    console.log(`✅ Inserted batch ${i / BATCH_SIZE + 1}`);
-  }
-
-  console.log("🎉 Indexing complete! Stored in Qdrant.");
-  return true;
+  return fileID;
 };

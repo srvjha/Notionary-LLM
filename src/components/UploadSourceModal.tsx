@@ -17,18 +17,13 @@ import {
 import { Input } from "./ui/input";
 import { Textarea } from "./ui/textarea";
 import { Button } from "./ui/button";
-
-type UploadSourcesModalProps = {
-  trigger: React.ReactNode;
-  onFilesSelected?: (formdata: FormData) => void;
-  onWebsiteClick?: (formdata: FormData) => void;
-  onCopiedTextClick?: (formdata: FormData) => void;
-  onYoutubeClick?: (formdata: FormData) => void;
-  accept?: string;
-  multiple?: boolean;
-  open?: boolean;
-  onOpenChange?: (open: boolean) => void;
-};
+import {
+  validateUploadPDF,
+  validateUploadText,
+  validateUploadWebsiteURL,
+  validateUploadYoutubeURL,
+} from "@/validators/upload.validator";
+import { UploadFormData, UploadSourcesModalProps } from "@/types/upload.type";
 
 const defaultAccept = ".pdf";
 
@@ -62,27 +57,38 @@ export default function UploadSourcesModal({
     youtube: "",
   });
 
-  const handleFiles = useCallback(
-    (fileList: FileList | null) => {
-      if (!fileList) return;
-
-      const file = Array.from(fileList);
-      const formData = new FormData();
-      formData.append("pdf", file[0]);
-      onFilesSelected?.(formData);
-      onOpenChange?.(false);
-    },
-    [onFilesSelected, onOpenChange]
-  );
-
-  const handleWebsiteUpload = () => {
-    if (!websiteUrl) return;
-    const websiteRegex = /^(https?:\/\/)?(www\.)?([a-z0-9-]+\.)+[a-z]{2,6}(\/[^\s]*)?$/i;
-    if (!websiteRegex.test(websiteUrl)) {
-      setTextError((prev) => ({ ...prev, website: "Invalid website URL." }));
+  const handleFiles = (fileList: FileList | null) => {
+    if (!fileList) return;
+    const file = fileList[0];
+    // for now i m only taking pdf
+    // TODO: add more files types
+    // zod validation for pdf
+    const validation = validateUploadPDF({ file });
+    if (!validation.success) {
+      setTextError((prev) => ({ ...prev, pdf: validation.error.message }));
       return;
     }
-    const formData = new FormData();
+    const formData = new FormData() as UploadFormData;
+    formData.append("pdf", file);
+    onFilesSelected?.(formData);
+    onOpenChange?.(false);
+  };
+
+  const handleWebsiteUpload = () => {
+    if (!websiteUrl) {
+      setTextError((prev) => ({
+        ...prev,
+        website: "Website URL is required.",
+      }));
+      return;
+    }
+    // zod validation for website
+    const validation = validateUploadWebsiteURL({ url: websiteUrl });
+    if (!validation.success) {
+      setTextError((prev) => ({ ...prev, website: validation.error.message }));
+      return;
+    }
+    const formData = new FormData() as UploadFormData;
     formData.append("website", websiteUrl);
     onWebsiteClick?.(formData);
     onOpenChange?.(false);
@@ -90,13 +96,20 @@ export default function UploadSourcesModal({
   };
 
   const handleYoutubeUpload = () => {
-    if (!youtubeUrl) return;
-    const youtubeRegex = /^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.?be)\/.+$/i;
-    if (!youtubeRegex.test(youtubeUrl)) {
-      setTextError((prev) => ({ ...prev, youtube: "Invalid YouTube URL." }));
+    if (!youtubeUrl) {
+      setTextError((prev) => ({
+        ...prev,
+        youtube: "YouTube URL is required.",
+      }));
       return;
     }
-    const formData = new FormData();
+    // zod validation for youtube
+    const validation = validateUploadYoutubeURL({ url: youtubeUrl });
+    if (!validation.success) {
+      setTextError((prev) => ({ ...prev, youtube: validation.error.message }));
+      return;
+    }
+    const formData = new FormData() as UploadFormData;
     formData.append("youtube", youtubeUrl);
     onYoutubeClick?.(formData);
     onOpenChange?.(false);
@@ -104,17 +117,27 @@ export default function UploadSourcesModal({
   };
 
   const handleCopiedTextUpload = () => {
-    if (copiedText.length > 25000) {
-      setTextError((prev) => ({ ...prev, copiedText: "Text should be 25000 characters or less." }));
+    if (!copiedText.trim()) {
+      setTextError((prev) => ({
+        ...prev,
+        copiedText: "Copied text is required.",
+      }));
       return;
     }
-    if (!collectionName) {
-      setTextError((prev) => ({ ...prev, collectionName: "Collection name is required." }));
+    // zod validation for copied text
+    const validation = validateUploadText({ text: copiedText });
+    if (!validation.success) {
+      setTextError((prev) => ({
+        ...prev,
+        copiedText: validation.error.message,
+      }));
       return;
     }
-    const formData = new FormData();
+    const formData = new FormData() as UploadFormData;
     formData.append("copiedText", copiedText);
-    formData.append("collectionName", collectionName);
+    if (collectionName) {
+      formData.append("collectionName", collectionName);
+    }
     onCopiedTextClick?.(formData);
     onOpenChange?.(false);
     setTextError((prev) => ({ ...prev, copiedText: "" }));
@@ -140,13 +163,33 @@ export default function UploadSourcesModal({
   };
 
   const handleUploadClick = () =>
-    setPopUpContent({ uploadFile: true, website: false, copiedText: false , youtube: false });
+    setPopUpContent({
+      uploadFile: true,
+      website: false,
+      copiedText: false,
+      youtube: false,
+    });
   const handleWebsiteClick = () =>
-    setPopUpContent({ uploadFile: false, website: true, copiedText: false , youtube: false });
+    setPopUpContent({
+      uploadFile: false,
+      website: true,
+      copiedText: false,
+      youtube: false,
+    });
   const handleCopiedTextClick = () =>
-    setPopUpContent({ uploadFile: false, website: false, copiedText: true , youtube: false });
+    setPopUpContent({
+      uploadFile: false,
+      website: false,
+      copiedText: true,
+      youtube: false,
+    });
   const handleYoutubeTextClick = () =>
-    setPopUpContent({ uploadFile: false, website: false, copiedText: false , youtube: true });
+    setPopUpContent({
+      uploadFile: false,
+      website: false,
+      copiedText: false,
+      youtube: true,
+    });
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -245,7 +288,7 @@ export default function UploadSourcesModal({
           </div>
         )}
 
-         {/* Youtube */}
+        {/* Youtube */}
         {popUpContent.youtube && (
           <div className="flex flex-col gap-2">
             <Input
@@ -259,8 +302,6 @@ export default function UploadSourcesModal({
             )}
           </div>
         )}
-
-       
 
         {/* Bottom buttons */}
         <div className="grid grid-cols-2 gap-4 mt-4">
@@ -287,7 +328,7 @@ export default function UploadSourcesModal({
             <span className="text-sm">Copied text</span>
           </button>
 
-           <button
+          <button
             onClick={handleYoutubeTextClick}
             className="flex flex-col items-center justify-center gap-2 cursor-pointer p-4 border border-neutral-700 rounded-xl hover:bg-neutral-800/70 active:scale-[0.99] transition"
           >
