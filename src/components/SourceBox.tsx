@@ -233,6 +233,7 @@ const SourceBox = ({
   const handleNewChat = () => {
     setSources([]);
     localStorage.removeItem(STORAGE_SOURCES);
+    localStorage.removeItem("chat_history");
     setContextCreated(false);
   };
 

@@ -195,7 +195,7 @@ const Page = () => {
             {/* embeding a yt video autoplay */}
             <div className="relative pt-[56.25%] mt-12">
               <iframe
-                src="https://www.youtube.com/embed/ctOAPrMxJY0?autoplay=1&mute=1"
+                src="https://www.youtube.com/embed/3QpY7EyjPXw?autoplay=1&mute=1"
                 title="YouTube video player"
                 className="absolute inset-0 w-full h-full rounded-xl shadow-lg shadow-neutral-700"
                 allow="autoplay; encrypted-media"
