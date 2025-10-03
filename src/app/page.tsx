@@ -167,15 +167,15 @@ const Page = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-neutral-900 text-white">
-      {/* Hero Section */}
+    <div className="min-h-screen  text-white">
+ 
       <div className="relative overflow-hidden">
         <div className="absolute inset-0 "></div>
         <div className="relative px-6 py-16">
           <div className="max-w-4xl  mx-auto text-center space-y-6">
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-500/20 border border-blue-500/30">
-              <Brain className="w-4 h-4 text-blue-400" />
-              <span className="text-sm font-medium text-blue-300">AI-Powered Document Intelligence</span>
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-green-900/20 border border-green-500/30">
+              <Brain className="w-4 h-4 text-green-400" />
+              <span className="text-sm font-medium text-green-100">AI-Powered Document Intelligence</span>
             </div>
             <h1 className="text-4xl md:text-5xl font-bold tracking-tight mt-5">
            Simplified Learning
@@ -193,20 +193,24 @@ const Page = () => {
             </Link>
 
             {/* embeding a yt video autoplay */}
-            <div className="relative pt-[56.25%] mt-12">
-              <iframe
-                src="https://www.youtube.com/embed/3QpY7EyjPXw?autoplay=1&mute=1"
-                title="YouTube video player"
-                className="absolute inset-0 w-full h-full rounded-xl shadow-lg shadow-neutral-700"
-                allow="autoplay; encrypted-media"
-                allowFullScreen
+             <div className="max-w-5xl mx-auto mb-20 bg-transparent rounded-2xl mt-12 ">
+          <div className="relative rounded-2xl overflow-hidden border border-neutral-900 shadow-sm shadow-neutral-800">
+            <div className=" ">
+              <video
+                className="w-full h-full object-cover"
+                src="/notecast.mp4"
+                autoPlay
+                muted
+                loop
+                playsInline
               />
             </div>
           </div>
         </div>
+          </div>
+        </div>
       </div>
 
-      {/* Core Features Overview */}
       <div className="px-6 py-16">
         <div className="max-w-6xl mx-auto">
           <h2 className="text-3xl font-bold text-center mb-12">Why Choose NoteCast?</h2>
@@ -224,10 +228,8 @@ const Page = () => {
         </div>
       </div>
 
-      {/* Supported Input Types */}
       <SupportedInputs inputTypes={inputTypes} />
 
-      {/* Chat Interface Guide */}
       <div className="px-6 py-16">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-12">
@@ -300,7 +302,6 @@ const Page = () => {
       </div>
 
 
-      {/* footer  */}
       <footer className="border-t border-neutral-800 py-6">
         <div className="max-w-6xl mx-auto">
           <p className="text-center text-gray-400 text-sm">
