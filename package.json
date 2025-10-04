@@ -9,7 +9,6 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@clerk/nextjs": "^6.31.4",
     "@langchain/community": "^0.3.53",
     "@langchain/core": "^0.3.72",
     "@langchain/google-genai": "^0.2.16",
