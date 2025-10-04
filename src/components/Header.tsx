@@ -2,17 +2,8 @@
 
 import React from "react";
 import { Button } from "@/components/ui/button";
-import { Moon, Sun, BookOpen, HelpCircle, DollarSign, LogIn } from "lucide-react";
 import Link from "next/link";
-// import { useTheme } from "next-themes";
-import {
-  ClerkProvider,
-  SignInButton,
-  SignUpButton,
-  SignedIn,
-  SignedOut,
-  UserButton,
-} from "@clerk/nextjs";
+
 
 export const Header = () => {
   return (
@@ -29,17 +20,7 @@ export const Header = () => {
         </div>
 
          <div className="flex items-center gap-6">
-          <SignedOut>
-            <SignInButton>
-              <Button variant="outline">
-                Sign In
-                <LogIn className="w-4 h-4" />
-              </Button>
-            </SignInButton>
-          </SignedOut>
-          <SignedIn>
-            <UserButton />
-          </SignedIn>
+         <Button className="cursor-pointer">Sign In</Button>
         </div>
       </div>
     </header>

@@ -1,16 +1,13 @@
-
 import type { Metadata } from "next";
 import "./globals.css";
 import { Header } from "@/components/Header";
 import { Providers } from "./Providers";
-import { Toaster } from 'react-hot-toast';
-import {
-  ClerkProvider
-} from '@clerk/nextjs'
+import { Toaster } from "react-hot-toast";
 
 export const metadata: Metadata = {
   title: "Notionary LLM - Your AI-Powered Notebook Assistant",
-  description: "An AI-powered assistant that helps you manage and organize your notes efficiently.",
+  description:
+    "An AI-powered assistant that helps you manage and organize your notes efficiently.",
 };
 
 export default function RootLayout({
@@ -19,7 +16,6 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-     <ClerkProvider>
     <html lang="en">
       <body className="dark">
         <Toaster />
@@ -29,6 +25,5 @@ export default function RootLayout({
         </Providers>
       </body>
     </html>
-    </ClerkProvider>
   );
 }
