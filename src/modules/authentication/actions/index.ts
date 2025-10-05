@@ -4,10 +4,16 @@ import { db } from "@/db";
 import { auth } from "@/utils/auth";
 import { headers } from "next/headers";
 
+async function getHeaderData(): Promise<Headers> {
+  await new Promise((resolve) => setTimeout(resolve, 1000));
+  return headers();
+}
+
 export const currentUser = async () => {
   try {
+    const head = await getHeaderData();
     const session = await auth.api.getSession({
-      headers: await headers(),
+      headers: head,
     });
      
     if (!session?.user?.id) {
