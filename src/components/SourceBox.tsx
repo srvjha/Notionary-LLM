@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import { Button } from "./ui/button";
 
 import UploadSourcesModal from "./UploadSourceModal";
@@ -17,14 +17,13 @@ import {
   Plus,
   PlusCircle,
   SquarePen,
-  TextIcon,
   Trash,
   Youtube,
 } from "lucide-react";
 import { UploadFormData } from "@/types/upload.type";
 import toast from "react-hot-toast";
 import { ClipLoader } from "react-spinners";
-import { PdfIcon, WebsiteIcon, YoutubeIcon } from "@/utils/icons";
+
 import {
   AlertDialog,
   AlertDialogAction,
