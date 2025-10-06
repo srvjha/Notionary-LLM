@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { authClient } from "@/lib/auth-client";
 import { useRouter } from "next/navigation";
+import toast from "react-hot-toast";
 
 // Types for the user data
 interface UserData {
@@ -57,13 +58,19 @@ export default function UserButton({
   const router = useRouter();
 
    const onSignOut = async()=>{
-    await authClient.signOut({
-      fetchOptions:{
-        onSuccess:()=>{
-          router.push("/sign-in")
+    try {
+      await authClient.signOut({
+        fetchOptions:{
+          onSuccess:()=>{
+            router.push("/sign-in")
+          }
         }
-      }
-    })
+      })
+      toast.success("Logged out successfully")
+    } catch (error) {
+      console.error("Error during logout:", error)
+      toast.error("Failed to log out. Please try again.")
+    }
   }
 
   const handleLogout = async () => {

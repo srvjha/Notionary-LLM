@@ -5,8 +5,8 @@ const pdfIndexingSchema = z.object({
     message: "File must be a PDF",
   }),
   userSessionId: z
-    .string({ message: "x-user-session header is required" })
-    .uuid("Invalid session id")
+    .string({ message: "session id is required" })
+    
     ,
 });
 

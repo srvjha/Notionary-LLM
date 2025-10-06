@@ -1,5 +1,6 @@
 services:
   qdrant:
     image: qdrant/qdrant
+    container_name: notionary
     ports:
       - 6333:6333

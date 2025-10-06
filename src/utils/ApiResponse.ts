@@ -5,11 +5,16 @@ class ApiResponse {
     public data: any,
     public message: string,
   ) {
-    this.statusCode = statusCode;
-    this.data = data;
-    this.message = message;
     this.success = statusCode < 400;
   }
-}
 
-export { ApiResponse };
+  toJSON() {
+    return {
+      success: this.success,
+      statusCode: this.statusCode,
+      data: this.data,
+      message: this.message,
+    };
+  }
+}
+export {ApiResponse}
