@@ -21,7 +21,8 @@ export const chat = async (userQuery: string, userSessionId: string) => {
   const vectorStore = await QdrantVectorStore.fromExistingCollection(
     embeddings,
     {
-      url: "http://localhost:6333",
+      url: env.QDRANT_URL,
+      apiKey: env.QDRANT_API_KEY,
       collectionName: `notionary-${userSessionId}`,
     }
   );

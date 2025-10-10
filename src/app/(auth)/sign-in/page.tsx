@@ -19,7 +19,7 @@ const SignIn = () => {
         provider,
         callbackURL: "/",
       });
-      toast.success("Login successful! Redirecting...");
+     
     } catch (error) {
       console.error("Error during sign-in:", error);
       toast.error("Failed to sign in. Please try again.");
