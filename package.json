@@ -1,10 +1,11 @@
 {
-  "name": "notionaryLLM",
+  "name": "notionaryllm",
   "version": "0.1.0",
   "private": true,
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "postinstall": "prisma generate",
     "start": "next start",
     "lint": "next lint"
   },
