@@ -16,5 +16,10 @@ export const env = createEnv({
     GOOGLE_CLIENT_ID: z.string().min(1),
     GOOGLE_CLIENT_SECRET: z.string().min(1),
   },
-  experimental__runtimeEnv: process.env,
+  client: {
+    NEXT_PUBLIC_COLLECTION_NAME: z.string().default("qdrantdb"),
+  },
+  experimental__runtimeEnv: {
+    NEXT_PUBLIC_COLLECTION_NAME: process.env.NEXT_PUBLIC_COLLECTION_NAME,
+  },
 });

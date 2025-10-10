@@ -49,10 +49,10 @@ export const textIndexing = async (
   await QdrantVectorStore.fromDocuments(newDocs, embeddings, {
     url: env.QDRANT_URL,
     apiKey: env.QDRANT_API_KEY,
-    collectionName: `notionary-${userSessionId}`,
+    collectionName: `${env.NEXT_PUBLIC_COLLECTION_NAME}-${userSessionId}`,
   });
 
-  await client.createPayloadIndex(`notionary-${userSessionId}`, {
+  await client.createPayloadIndex(`${env.NEXT_PUBLIC_COLLECTION_NAME}-${userSessionId}`, {
     field_name: "fileID",
     field_schema: { type: "keyword" },
   });

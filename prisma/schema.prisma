@@ -19,16 +19,18 @@ enum Role {
 }
 
 model User {
-  id            String    @id
+  id            String          @id
   name          String
   email         String
-  emailVerified Boolean   @default(false)
+  emailVerified Boolean         @default(false)
   image         String?
-  role          Role      @default(USER)
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @default(now()) @updatedAt
+  role          Role            @default(USER)
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @default(now()) @updatedAt
   sessions      Session[]
   accounts      Account[]
+  ContextSource ContextSource[]
+  ChatSession   ChatSession[]
 
   @@unique([email])
   @@map("user")
@@ -77,4 +79,54 @@ model Verification {
   updatedAt  DateTime @default(now()) @updatedAt
 
   @@map("verification")
+}
+
+model ContextSource {
+  id               String        @id @default(uuid())
+  title            String
+  sourceType       SourceType
+  size             Float?
+  charLength       Int?
+  url              String?
+  qdrantCollection String
+  userId           String
+  user             User          @relation(fields: [userId], references: [id])
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+  chatSessions     ChatSession[] @relation("ContextToChat")
+}
+
+enum SourceType {
+  PDF
+  TEXT
+  WEBSITE
+  YOUTUBE
+}
+
+model ChatSession {
+  id        String          @id @default(uuid())
+  userId    String
+  user      User            @relation(fields: [userId], references: [id])
+  title     String?
+  summary   String?
+  createdAt DateTime        @default(now())
+  updatedAt DateTime        @updatedAt
+  contexts  ContextSource[] @relation("ContextToChat")
+  messages  Message[]
+}
+
+model Message {
+  id            String      @id @default(uuid())
+  chatSessionId String
+  chatSession   ChatSession @relation(fields: [chatSessionId], references: [id])
+  role          MessageRole
+  content       String
+  metadata      Json?
+  createdAt     DateTime    @default(now())
+}
+
+enum MessageRole {
+  USER
+  ASSISTANT
+  SYSTEM
 }

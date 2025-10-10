@@ -50,7 +50,7 @@ export const pdfIndexing = async (pdf: File, userSessionId: string) => {
   await QdrantVectorStore.fromDocuments(newDocs, embeddings, {
     url: env.QDRANT_URL,
     apiKey: env.QDRANT_API_KEY,
-    collectionName: `notionary-${userSessionId}`,
+    collectionName: `${env.NEXT_PUBLIC_COLLECTION_NAME}-${userSessionId}`,
   });
 
   await client.createPayloadIndex(`notionary-${userSessionId}`, {

@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import UploadSourcesModal from "./uploadSourceModal";
 import {
@@ -14,7 +14,7 @@ import {
 } from "lucide-react";
 import { UploadFormData } from "@/types/upload.type";
 import toast from "react-hot-toast";
-import { ClipLoader } from "react-spinners";
+import { BeatLoader, ClipLoader } from "react-spinners";
 
 import {
   AlertDialog,
@@ -28,7 +28,14 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 
-import { usePdfIndexing,useTextIndexing,useWebsiteIndexing,useYoutubeIndexing } from "../hooks/notebook";
+import {
+  usePdfIndexing,
+  useTextIndexing,
+  useWebsiteIndexing,
+  useYoutubeIndexing,
+} from "../hooks/notebook";
+import { useGetAllContexts } from "../hooks/context";
+import { useCurrentUser } from "@/modules/authentication/hooks/auth";
 
 interface SourceBoxProps {
   open: boolean;
@@ -36,7 +43,7 @@ interface SourceBoxProps {
   contextCreated: boolean;
   setContextCreated: (created: boolean) => void;
 }
-interface Source {
+export interface Source {
   title: string;
   type: "pdf" | "website" | "text" | "youtube";
   fileID?: string;
@@ -47,14 +54,26 @@ const SourceBox = ({
   contextCreated,
   setContextCreated,
 }: SourceBoxProps) => {
- 
   const [sources, setSources] = useState<Source[]>([]);
-  const { mutateAsync: uploadWebsite,isPending:isUploadingWebsite} = useWebsiteIndexing();
-  const { mutateAsync: uploadText,isPending:isUploadingText } = useTextIndexing();
-  const { mutateAsync: uploadYoutube,isPending:isUploadingYoutube } = useYoutubeIndexing();
-  const { mutateAsync: uploadPdf,isPending:isUploadingPdf } = usePdfIndexing();
+  const { mutateAsync: uploadWebsite, isPending: isUploadingWebsite } =
+    useWebsiteIndexing();
+  const { mutateAsync: uploadText, isPending: isUploadingText } =
+    useTextIndexing();
+  const { mutateAsync: uploadYoutube, isPending: isUploadingYoutube } =
+    useYoutubeIndexing();
+  const { mutateAsync: uploadPdf, isPending: isUploadingPdf } =
+    usePdfIndexing();
 
- 
+  const { data: user } = useCurrentUser();
+  const userId = user?.id;
+  const { data: contexts, isLoading: isContextsLoading } =
+    useGetAllContexts(userId);
+
+  useEffect(() => {
+    if (contexts) {
+      setSources(contexts);
+    }
+  }, [contexts]);
 
   const handleFilesSelected = async (formData: UploadFormData) => {
     const pdfFileName = formData.get("pdf")?.name;
@@ -97,7 +116,7 @@ const SourceBox = ({
   const handleWebsite = async (formData: UploadFormData) => {
     const websiteUrl = formData.get("website");
 
-     const isExisting = sources.some(
+    const isExisting = sources.some(
       (source) => source.title === websiteUrl && source.type === "website"
     );
     if (isExisting) {
@@ -146,7 +165,7 @@ const SourceBox = ({
       setSources((prev) => [...prev, { title: copiedText, type: "text" }]);
     }
     try {
-      const response = await uploadText(formData)
+      const response = await uploadText(formData);
 
       if (response.success) {
         const { fileId } = response.data;
@@ -184,7 +203,7 @@ const SourceBox = ({
       setSources((prev) => [...prev, { title: youtubeUrl, type: "youtube" }]);
     }
     try {
-      const response = await uploadYoutube(formData)
+      const response = await uploadYoutube(formData);
       if (response.success) {
         const { fileId } = response.data;
         console.log({ fileId });
@@ -216,10 +235,7 @@ const SourceBox = ({
   const handleDeleteSource = async (fileId?: string) => {
     setSources((prev) => prev.filter((source) => source.fileID !== fileId));
     toast.success("Source deleted successfully");
-   
   };
-
-  
 
   return (
     <div className="h-full flex flex-col">
@@ -255,50 +271,56 @@ const SourceBox = ({
       </div>
 
       <div className="p-1.5">
-        {sources.map((source, index) => (
-          <div
-            key={index}
-            className="flex items-center gap-2 border rounded-lg p-3 mb-3 mt-1 cursor-pointer transition bg-neutral-900 text-neutral-100"
-          >
-            <div className="flex gap-2 w-full text-neutral-50 ">
-              {source.type === "pdf" &&
-                (isUploadingPdf ? (
-                  <ClipLoader size={24} color="white" />
-                ) : (
-                  <SquarePen className="w-5 h-5 mt-0.5 text-white" />
-                ))}
+        {isContextsLoading ? (
+          <div className="flex justify-center items-center px-4 py-6">
+           <ClipLoader size={28} color="white" />
+           </div>
+        ) : (
+          sources.map((source, index) => (
+            <div
+              key={index}
+              className="flex items-center gap-2 border rounded-lg p-3 mb-3 mt-1 cursor-pointer transition bg-neutral-900 text-neutral-100"
+            >
+              <div className="flex gap-2 w-full text-neutral-50 ">
+                {source.type === "pdf" &&
+                  (isUploadingPdf ? (
+                    <ClipLoader size={24} color="white" />
+                  ) : (
+                    <SquarePen className="w-5 h-5 mt-0.5 text-white" />
+                  ))}
 
-              {source.type === "website" &&
-                (isUploadingWebsite ? (
-                  <ClipLoader size={24} color="white" />
-                ) : (
-                  <Globe className="w-5 h-5 mt-0.5 text-white" />
-                ))}
+                {source.type === "website" &&
+                  (isUploadingWebsite ? (
+                    <ClipLoader size={24} color="white" />
+                  ) : (
+                    <Globe className="w-5 h-5 mt-0.5 text-white" />
+                  ))}
 
-              {source.type === "text" &&
-                (isUploadingText ? (
-                  <ClipLoader size={24} color="white" />
-                ) : (
-                  <DockIcon className="w-5 h-5 mt-0.5 text-white" />
-                ))}
+                {source.type === "text" &&
+                  (isUploadingText ? (
+                    <ClipLoader size={24} color="white" />
+                  ) : (
+                    <DockIcon className="w-5 h-5 mt-0.5 text-white" />
+                  ))}
 
-              {source.type === "youtube" &&
-                (isUploadingYoutube ? (
-                  <ClipLoader size={24} color="white" />
-                ) : (
-                  <Youtube className="w-5 h-5 mt-0.5 text-white" />
-                ))}
-             
-             <div className="flex justify-between items-center w-full">
-              <span className="truncate flex">{source.title}</span>
-              <Trash
-                className="w-5 h-5 mt-0.5 text-red-500"
-                onClick={() => handleDeleteSource(source.fileID)}
-              />
+                {source.type === "youtube" &&
+                  (isUploadingYoutube ? (
+                    <ClipLoader size={24} color="white" />
+                  ) : (
+                    <Youtube className="w-5 h-5 mt-0.5 text-white" />
+                  ))}
+
+                <div className="flex justify-between items-center w-full">
+                  <span className="truncate flex">{source.title}</span>
+                  <Trash
+                    className="w-5 h-5 mt-0.5 text-red-500"
+                    onClick={() => handleDeleteSource(source.fileID)}
+                  />
+                </div>
               </div>
             </div>
-          </div>
-        ))}
+          ))
+        )}
       </div>
 
       {sources.length === 0 ? (

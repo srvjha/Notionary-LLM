@@ -23,7 +23,7 @@ export const chat = async (userQuery: string, userSessionId: string) => {
     {
       url: env.QDRANT_URL,
       apiKey: env.QDRANT_API_KEY,
-      collectionName: `notionary-${userSessionId}`,
+      collectionName: `${env.NEXT_PUBLIC_COLLECTION_NAME}-${userSessionId}`,
     }
   );
 
