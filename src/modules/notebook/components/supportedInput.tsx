@@ -9,7 +9,7 @@ export default function SupportedInputs({ inputTypes }: { inputTypes: Array<any>
         <div className="text-center mb-12">
           <h2 className="text-3xl font-bold mb-4">Supported Content Types</h2>
           <p className="text-gray-300">
-            NoteCast works with multiple content formats to give you maximum flexibility
+            Notionary LLM works with multiple content formats to give you maximum flexibility
           </p>
         </div>
 
