@@ -19,7 +19,7 @@ const Page = () => {
                 AI-Powered Document Intelligence
               </span>
             </div>
-            <h1 className="text-7xl h-22 md:text-7xl font-semibold tracking-tight mt-5 bg-gradient-to-r from-blue-500 via-teal-400 to-green-400 bg-clip-text text-transparent">
+            <h1 className="text-4xl h-22 sm:text-6xl md:text-7xl font-semibold tracking-tight mt-5 bg-gradient-to-r from-blue-500 via-teal-400 to-green-400 bg-clip-text text-transparent">
               Knowledge Companion
             </h1>
 
