@@ -14,7 +14,7 @@ const client = new QdrantClient({
   apiKey: env.QDRANT_API_KEY,
 });
 
-export const pdfIndexing = async (pdf: File, userSessionId: string) => {
+export const pdfIndexing = async (pdf: File, chatSessionId: string) => {
   const loader = new PDFLoader(pdf);
 
   //page by page load the pdf file
@@ -50,10 +50,10 @@ export const pdfIndexing = async (pdf: File, userSessionId: string) => {
   await QdrantVectorStore.fromDocuments(newDocs, embeddings, {
     url: env.QDRANT_URL,
     apiKey: env.QDRANT_API_KEY,
-    collectionName: `${env.NEXT_PUBLIC_COLLECTION_NAME}-${userSessionId}`,
+    collectionName: `${env.NEXT_PUBLIC_COLLECTION_NAME}-${chatSessionId}`,
   });
 
-  await client.createPayloadIndex(`notionary-${userSessionId}`, {
+  await client.createPayloadIndex(`notionary-${chatSessionId}`, {
     field_name: "fileID",
     field_schema: { type: "keyword" },
   });

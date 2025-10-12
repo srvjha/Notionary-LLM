@@ -5,8 +5,27 @@ import { MessageSquare, Brain, ArrowRight, Play } from "lucide-react";
 import Link from "next/link";
 import SupportedInputs from "@/modules/notebook/components/supportedInput";
 import { features, inputTypes } from "./helper";
+import {
+  createChatSession,
+  getLastActiveChatSession,
+} from "@/modules/notebook/actions/chat";
+import { redirect } from "next/navigation";
 
 const Page = () => {
+  const handleNoteBook = async () => {
+    // 1.check if there is any chat session already for user
+    // 2. if session is there get the id and navigate to the notebook
+    // 3. if no session then create a chat session and navigate to it
+
+    const userLastActiveSession = await getLastActiveChatSession();
+    if (userLastActiveSession) {
+      const sessionId = userLastActiveSession.id;
+      redirect(`/notebook/${sessionId}`);
+    } else {
+      const newSession = await createChatSession();
+      if (newSession) redirect(`/notebook/${newSession.id}`);
+    }
+  };
   return (
     <div className="min-h-screen  text-white">
       <div className="relative overflow-hidden">
@@ -29,21 +48,20 @@ const Page = () => {
               powered by Notionary LLM.{" "}
             </p>
             <div className="flex justify-center items-center gap-2 mt-10">
-              <Link href="/chat">
-                <Button className=" px-5 py-6 text-lg cursor-pointer hover:bg-transparent hover:border hover:border-neutral-300 hover:text-neutral-100">
-                  Get Started
-                  <ArrowRight />
+              <Button
+                className=" px-5 py-6 text-lg cursor-pointer hover:bg-transparent hover:border hover:border-neutral-300 hover:text-neutral-100"
+                onClick={handleNoteBook}
+              >
+                Get Started
+                <ArrowRight />
+              </Button>
+
+              <Link href="https://youtu.be/3QpY7EyjPXw" target="__blank">
+                <Button className=" px-5 py-6 text-lg bg-transparent border border-neutral-300 text-neutral-100 hover:bg-neutral-100 hover:text-neutral-900 cursor-pointer">
+                  Watch Demo
                 </Button>
               </Link>
-              
-              <Link href="https://youtu.be/3QpY7EyjPXw" target="__blank">
-              <Button className=" px-5 py-6 text-lg bg-transparent border border-neutral-300 text-neutral-100 hover:bg-neutral-100 hover:text-neutral-900 cursor-pointer">
-                Watch Demo
-              </Button>
-              </Link>
             </div>
-
-           
           </div>
         </div>
       </div>
@@ -61,8 +79,12 @@ const Page = () => {
               >
                 <CardContent className="px-2 py-2 flex flex-col justify-center items-center text-center space-y-3">
                   {feature.icon}
-                  <h3 className="font-semibold text-base text-white">{feature.title}</h3>
-                  <p className="text-gray-400 text-base">{feature.description}</p>
+                  <h3 className="font-semibold text-base text-white">
+                    {feature.title}
+                  </h3>
+                  <p className="text-gray-400 text-base">
+                    {feature.description}
+                  </p>
                 </CardContent>
               </Card>
             ))}

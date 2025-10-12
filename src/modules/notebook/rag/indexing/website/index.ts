@@ -31,9 +31,7 @@ export const websiteIndexing = async (url: string, userSessionId: string) => {
     chunkSize: 2000,
     chunkOverlap: 200,
   });
-  console.log({textSplitter})
   const splitDocs = await textSplitter.splitDocuments(docs);
-  console.log({splitDocs})
   if (!splitDocs || splitDocs.length === 0) {
     // return res.status(400).json({ error: 'No content could be extracted from the file' });
     throw new ApiError("No content could be extracted from the file", 400);

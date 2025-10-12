@@ -8,35 +8,33 @@ import {
   validateWebsiteIndexing,
 } from "@/validators/indexingApi.validator";
 import { pdfIndexing } from "../../rag/indexing/pdf";
-import { currentUser } from "@/modules/authentication/actions";
 import { textIndexing } from "../../rag/indexing/text";
 import { websiteIndexing } from "../../rag/indexing/website";
 import { youtubeIndexing } from "../../rag/indexing/youtube";
 import { addContext } from "../context";
 import { SourceType } from "@prisma/client";
+import { getLastActiveChatSession } from "../chat";
 
+/* ---------------------- PDF Indexing ---------------------- */
 export async function handlePdfIndexing(formData: FormData) {
   try {
     const pdf = formData.get("pdf") as File;
-    const session = await currentUser();
-    if (!session) {
-      throw new ApiError("Unauthorized", 401);
-    }
-    const userSessionId = session.id;
-    if (!userSessionId) {
-      throw new ApiError("x-user-session field is required", 400);
-    }
+    const chatSession = await getLastActiveChatSession();
+    if (!chatSession?.id) throw new ApiError("Unauthorized", 401);
 
-    const validations = validatePDFIndexing({ file: pdf, userSessionId });
+    const validations = validatePDFIndexing({
+      file: pdf,
+      chatSessionId: chatSession.id,
+    });
     if (!validations.success) {
-      const errorMessage = validations.error.issues[0]?.message;
-      throw new ApiError(`Invalid PDF indexing data :${errorMessage}`, 400);
+      throw new ApiError(
+        `Invalid PDF indexing data: ${validations.error.issues[0]?.message}`,
+        400
+      );
     }
 
-    const indexingFileId = await pdfIndexing(pdf, userSessionId);
-    if (!indexingFileId) {
-      throw new ApiError("Indexing Failed ❌", 500);
-    }
+    const indexingFileId = await pdfIndexing(pdf, chatSession.id);
+    if (!indexingFileId) throw new ApiError("Indexing Failed ❌", 500);
 
     const contextData = {
       source: {
@@ -45,14 +43,9 @@ export async function handlePdfIndexing(formData: FormData) {
         size: pdf.size,
         qdrantCollection: indexingFileId,
       },
-      userSessionId,
+      chatSessionId: chatSession.id,
     };
-
-    try {
-      await addContext(contextData);
-    } catch (error: any) {
-      console.log("Error while adding pdf to context: ", error.message);
-    }
+    await safeAddContext(contextData, "pdf");
 
     return new ApiResponse(
       200,
@@ -65,44 +58,37 @@ export async function handlePdfIndexing(formData: FormData) {
   }
 }
 
+/* ---------------------- TEXT Indexing ---------------------- */
 export async function handleTextIndexing(formData: FormData) {
   try {
     const copiedText = formData.get("copiedText") as string;
-    const session = await currentUser();
-    if (!session) {
-      throw new ApiError("Unauthorized", 401);
-    }
-    const userSessionId = session.id;
+    const chatSession = await getLastActiveChatSession();
+    if (!chatSession?.id) throw new ApiError("Unauthorized", 401);
 
     const validations = validateTextIndexing({
       text: copiedText,
-      userSessionId,
+      chatSessionId: chatSession.id,
     });
     if (!validations.success) {
-      const errorMessage = validations.error.issues[0]?.message;
-      throw new ApiError(`Invalid Text indexing data ${errorMessage}`, 400);
-    }
-    const indexingFileId = await textIndexing(copiedText, userSessionId);
-    if (!indexingFileId) {
-      throw new ApiError("Indexing Failed ❌", 500);
+      throw new ApiError(
+        `Invalid Text indexing data: ${validations.error.issues[0]?.message}`,
+        400
+      );
     }
 
-     const contextData = {
+    const indexingFileId = await textIndexing(copiedText, chatSession.id);
+    if (!indexingFileId) throw new ApiError("Indexing Failed ❌", 500);
+
+    const contextData = {
       source: {
-        title: copiedText.slice(0,10),
+        title: copiedText.slice(0, 30),
         sourceType: SourceType.TEXT,
         charLength: copiedText.length,
         qdrantCollection: indexingFileId,
       },
-      userSessionId,
+      chatSessionId: chatSession.id,
     };
-
-    try {
-      await addContext(contextData);
-    } catch (error: any) {
-      console.log("Error while adding text to context: ", error.message);
-    }
-
+    await safeAddContext(contextData, "text");
 
     return new ApiResponse(
       200,
@@ -110,51 +96,43 @@ export async function handleTextIndexing(formData: FormData) {
       "Text Indexed Successfully ✅"
     ).toJSON();
   } catch (error) {
-    console.error("Error in handlePdfIndexing:", error);
+    console.error("Error in handleTextIndexing:", error);
     throw error;
   }
 }
 
+/* ---------------------- WEBSITE Indexing ---------------------- */
 export async function handleWebsiteIndexing(formData: FormData) {
   try {
     const website = formData.get("website") as string;
-    const session = await currentUser();
-    if (!session) {
-      throw new ApiError("Unauthorized", 401);
-    }
-    const userSessionId = session.id;
+    const chatSession = await getLastActiveChatSession();
+    if (!chatSession?.id) throw new ApiError("Unauthorized", 401);
 
     const validations = validateWebsiteIndexing({
       url: website,
-      userSessionId,
+      chatSessionId: chatSession.id,
     });
     if (!validations.success) {
-      const errorMessage = validations.error.issues[0]?.message;
-      throw new ApiError(`Invalid website indexing data ${errorMessage}`, 400);
-    }
-    const indexingFileId = await websiteIndexing(website, userSessionId);
-    if (!indexingFileId) {
-      throw new ApiError("Indexing Failed ❌", 500);
+      throw new ApiError(
+        `Invalid Website indexing data: ${validations.error.issues[0]?.message}`,
+        400
+      );
     }
 
-     const {hostname} = new URL(website)
+    const indexingFileId = await websiteIndexing(website, chatSession.id);
+    if (!indexingFileId) throw new ApiError("Indexing Failed ❌", 500);
 
-     const contextData = {
+    const { hostname } = new URL(website);
+    const contextData = {
       source: {
         title: hostname,
         sourceType: SourceType.WEBSITE,
-        url:website,
+        url: website,
         qdrantCollection: indexingFileId,
       },
-      userSessionId,
+      chatSessionId: chatSession.id,
     };
-
-    try {
-      await addContext(contextData);
-    } catch (error: any) {
-      console.log("Error while adding website to context: ", error.message);
-    }
-
+    await safeAddContext(contextData, "website");
 
     return new ApiResponse(
       200,
@@ -162,58 +140,59 @@ export async function handleWebsiteIndexing(formData: FormData) {
       "Website Indexed Successfully ✅"
     ).toJSON();
   } catch (error) {
-    console.error("Error in handlePdfIndexing:", error);
+    console.error("Error in handleWebsiteIndexing:", error);
     throw error;
   }
 }
 
+/* ---------------------- YOUTUBE Indexing ---------------------- */
 export async function handleYoutubeIndexing(formData: FormData) {
   try {
-    const youtube = formData.get("youtube") as string;
-    const session = await currentUser();
-    if (!session) {
-      throw new ApiError("Unauthorized", 401);
-    }
-    const userSessionId = session.id;
+    const youtubeUrl = formData.get("youtube") as string;
+    const chatSession = await getLastActiveChatSession();
+    if (!chatSession?.id) throw new ApiError("Unauthorized", 401);
 
     const validations = validateWebsiteIndexing({
-      url: youtube,
-      userSessionId,
+      url: youtubeUrl,
+      chatSessionId: chatSession.id,
     });
     if (!validations.success) {
-      const errorMessage = validations.error.issues[0]?.message;
-      throw new ApiError(`Invalid website indexing data ${errorMessage}`, 400);
-    }
-    const indexingFileId = await youtubeIndexing(youtube, userSessionId);
-    if (!indexingFileId) {
-      throw new ApiError("Indexing Failed ❌", 500);
+      throw new ApiError(
+        `Invalid YouTube indexing data: ${validations.error.issues[0]?.message}`,
+        400
+      );
     }
 
-     const contextData = {
+    const indexingFileId = await youtubeIndexing(youtubeUrl, chatSession.id);
+    if (!indexingFileId) throw new ApiError("Indexing Failed ❌", 500);
+
+    const contextData = {
       source: {
-        title: youtube,
-        sourceType: SourceType.WEBSITE,
-        url:youtube,
+        title: youtubeUrl,
+        sourceType: SourceType.YOUTUBE,
+        url: youtubeUrl,
         qdrantCollection: indexingFileId,
       },
-      userSessionId,
+      chatSessionId: chatSession.id,
     };
-
-    try {
-      await addContext(contextData);
-    } catch (error: any) {
-      console.log("Error while adding youtube video to context: ", error.message);
-    }
+    await safeAddContext(contextData, "youtube");
 
     return new ApiResponse(
       200,
-      {
-        fileId: indexingFileId,
-      },
-      "Youtube Video Indexed Successfully"
+      { fileId: indexingFileId },
+      "YouTube Video Indexed Successfully ✅"
     ).toJSON();
   } catch (error) {
-    console.error("Error in handlePdfIndexing:", error);
+    console.error("Error in handleYoutubeIndexing:", error);
     throw error;
+  }
+}
+
+/* ---------------------- Helper ---------------------- */
+async function safeAddContext(contextData: any, label: string) {
+  try {
+    await addContext(contextData);
+  } catch (error: any) {
+    console.log(`Error while adding ${label} to context:`, error.message);
   }
 }

@@ -1,20 +1,17 @@
-'use server'
-// import { GoogleGenerativeAIEmbeddings } from "@langchain/google-genai";
+"use server";
 import { env } from "@/lib/env";
 import { OpenAIEmbeddings } from "@langchain/openai";
 import { QdrantVectorStore } from "@langchain/qdrant";
-import OpenAI from "openai";
+import { convertToModelMessages, streamText, UIMessage } from "ai";
 
-const client = new OpenAI({
-  apiKey: env.OPENAI_API_KEY,
-});
-export const chat = async (userQuery: string, userSessionId: string) => {
-  // const embeddings = new GoogleGenerativeAIEmbeddings({
-  //   apiKey: process.env.GEMINI_API_KEY,
-  //   model: "models/embedding-001", // Correct Gemini embeddings model
-  // });
+
+export const chat = async (messages: UIMessage[], chatSessionId: string) => {
+  const userLastMessage = messages[messages.length - 1];
+  const userQuery =
+    userLastMessage.parts.find((p) => p.type === "text")?.text ?? "";
 
   const embeddings = new OpenAIEmbeddings({
+    apiKey:env.OPENAI_API_KEY,
     model: "text-embedding-3-large",
   });
 
@@ -23,7 +20,7 @@ export const chat = async (userQuery: string, userSessionId: string) => {
     {
       url: env.QDRANT_URL,
       apiKey: env.QDRANT_API_KEY,
-      collectionName: `${env.NEXT_PUBLIC_COLLECTION_NAME}-${userSessionId}`,
+      collectionName: `${env.NEXT_PUBLIC_COLLECTION_NAME}-${chatSessionId}`,
     }
   );
 
@@ -47,14 +44,12 @@ export const chat = async (userQuery: string, userSessionId: string) => {
     ${JSON.stringify(relevantChunks)}
     `;
 
-  const response = await client.chat.completions.create({
+  const response = streamText({
     model: "gpt-4.1",
-    messages: [
-      { role: "system", content: SYSTEM_PROMPT },
-      { role: "user", content: userQuery },
-    ],
+    messages: convertToModelMessages(messages),
+    system: SYSTEM_PROMPT,
+    
   });
 
-  const modelResponse = response.choices[0].message.content;
-  return modelResponse;
+  return response;
 };

@@ -4,7 +4,7 @@ const pdfIndexingSchema = z.object({
   file: z.instanceof(File).refine((file) => file.type === "application/pdf", {
     message: "File must be a PDF",
   }),
-  userSessionId: z
+  chatSessionId: z
     .string({ message: "session id is required" })
     
     ,
@@ -12,25 +12,22 @@ const pdfIndexingSchema = z.object({
 
 const websiteIndexingSchema = z.object({
   url: z.string().url({ message: "Invalid URL" }),
-  userSessionId: z
-    .string({ message: "x-user-session header is required" })
-    .uuid("Invalid session id"),
+  chatSessionId: z
+     .string({ message: "session id is required" })
 });
 
 const textIndexingSchema = z.object({
   text: z.string().min(2).max(10000),
-  userSessionId: z
-    .string({ message: "x-user-session header is required" })
-    .uuid("Invalid session id"),
+  chatSessionId: z
+     .string({ message: "session id is required" })
 });
 
 
 
 const youtubeIndexingSchema = z.object({
   url: z.string().url({ message: "Invalid YouTube URL" }),
-  userSessionId: z
-    .string({ message: "x-user-session header is required" })
-    .uuid("Invalid session id"),
+  chatSessionId: z
+    .string({ message: "session id is required" })
 });
 
 // types

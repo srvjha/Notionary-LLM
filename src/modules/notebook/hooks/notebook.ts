@@ -6,7 +6,6 @@ import {
   handleYoutubeIndexing,
 } from "../actions/indexing";
 
-import { chatWithDocs } from "../actions/chat";
 
 export function usePdfIndexing() {
   return useMutation({
@@ -32,8 +31,3 @@ export function useTextIndexing() {
   });
 }
 
-export function useChatWithDocs() {
-  return useMutation({
-    mutationFn: (userQuery: string) => chatWithDocs(userQuery),
-  });
-}

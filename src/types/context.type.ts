@@ -11,5 +11,5 @@ export interface ContextSourceInput {
 
 export interface ContextIndexingType {
   source: ContextSourceInput;
-  userSessionId: string;
+  chatSessionId: string;
 }

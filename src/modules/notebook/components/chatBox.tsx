@@ -1,62 +1,48 @@
-import { useForm, Controller, useFieldArray } from "react-hook-form";
-import { useEffect, useRef } from "react";
-
-import { BeatLoader } from "react-spinners";
-import ReactMarkdown from "react-markdown";
-import { isMarkdown } from "@/utils/helper";
-import { Upload, Send, Brain } from "lucide-react";
-import { Input } from "@/components/ui/input";
+import { useEffect, useState } from "react";
+import { UIMessage, useChat } from "@ai-sdk/react";
+import { Upload, Brain, RefreshCcwIcon, CopyIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useChatWithDocs } from "../hooks/notebook";
-
-interface ChatForm {
-  input: string;
-  messages: { role: "user" | "bot"; text: string }[];
-}
+import {
+  Conversation,
+  ConversationContent,
+  ConversationScrollButton,
+} from "@/components/ai-elements/conversation";
+import { Message, MessageContent } from "@/components/ai-elements/message";
+import { Response } from "@/components/ai-elements/response";
+import { Action, Actions } from "@/components/ai-elements/actions";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Loader } from "@/components/ai-elements/loader";
+import {
+  PromptInput,
+  PromptInputMessage,
+  PromptInputSubmit,
+  PromptInputTextarea,
+} from "@/components/ai-elements/prompt-input";
+import { useCurrentUser } from "@/modules/authentication/hooks/auth";
 
 interface ChatBoxProps {
   setOpen: (open: boolean) => void;
   setContextCreated: (created: boolean) => void;
+  UserMessages: UIMessage[];
   contextCreated: boolean;
 }
 
-const ChatBox = ({ setOpen, contextCreated }: ChatBoxProps) => {
-  const { control, handleSubmit, setValue, watch, reset } = useForm<ChatForm>({
-    defaultValues: {
-      input: "",
-      messages: [],
-    },
-  });
+const ChatBox = ({ setOpen, contextCreated, UserMessages }: ChatBoxProps) => {
+  let { messages, sendMessage, status, regenerate } = useChat();
+  const [input, setInput] = useState("");
+  const { data: user } = useCurrentUser();
 
-  const { fields, append } = useFieldArray({
-    control,
-    name: "messages",
-  });
 
-  const { mutateAsync: chatWithDocs, isPending: isLoading } = useChatWithDocs();
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-  const messages = watch("messages");
-
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [fields]);
-
-  const onSubmit = async (data: ChatForm) => {
-    if (!data.input.trim()) return;
-
-    append({ role: "user", text: data.input });
-    setValue("input", "");
-
-    try {
-      const response = await chatWithDocs(data.input);
-      if (response.success) {
-        append({ role: "bot", text: response.data.reply });
-      }
-    } catch {
-      append({ role: "bot", text: "❌ Error fetching reply" });
-    } finally {
-      setValue("input", "");
+  const handleSubmit = (message: PromptInputMessage) => {
+    const hasText = Boolean(message.text?.trim());
+    if (!hasText) {
+      return;
     }
+
+    sendMessage({
+      text: message.text || "",
+    });
+    setInput("");
   };
 
   return (
@@ -68,12 +54,7 @@ const ChatBox = ({ setOpen, contextCreated }: ChatBoxProps) => {
           <Button
             variant="destructive"
             className="cursor-pointer "
-            onClick={() =>
-              reset({
-                input: "",
-                messages: [],
-              })
-            }
+            onClick={() => (messages = [])}
           >
             Clear Chat
           </Button>
@@ -109,74 +90,115 @@ const ChatBox = ({ setOpen, contextCreated }: ChatBoxProps) => {
             </div>
           )}
 
-          {fields.map((msg) => (
-            <div
-              key={msg.id}
-              className={`w-full flex ${
-                msg.role === "user" ? "justify-end" : "justify-start"
-              }`}
-            >
-              <div
-                className={`inline-block max-w-[60%] px-4 py-2 rounded-2xl text-base leading-relaxed break-words shadow-md ${
-                  msg.role === "user"
-                    ? "bg-blue-600 text-white rounded-br-none"
-                    : "bg-neutral-800 text-neutral-100 rounded-bl-none"
-                }`}
-              >
-                {msg.role === "bot" ? (
-                  isMarkdown(msg.text) ? (
-                    <ReactMarkdown>{msg.text}</ReactMarkdown>
-                  ) : (
-                    <p>{msg.text}</p>
-                  )
-                ) : (
-                  <span>{msg.text}</span>
-                )}
-              </div>
-            </div>
-          ))}
+          <Conversation className="h-full rounded-xl">
+            <ConversationContent>
+              {messages.map((message) => (
+                <div key={message.id}>
+                  <Message from={message.role} key={message.id}>
+                    <div className="flex items-start space-x-2">
+                      {message.role === "assistant" && (
+                        <img
+                          className="w-8 h-8 rounded-full"
+                          src="https://avatar.iran.liara.run/public/32"
+                          alt="assitant"
+                        />
+                      )}
 
-          {isLoading && (
+                      <MessageContent>
+                        {message.parts.map((part, i) => {
+                          switch (part.type) {
+                            case "text":
+                              const isLastMessage =
+                                messages[messages.length - 1].id === message.id;
+                              return (
+                                <div key={`${message.id}-${i}`}>
+                                  <Response>{part.text}</Response>
+                                  {message.role === "assistant" &&
+                                    isLastMessage && (
+                                      <Actions className="mt-2">
+                                        <Action
+                                          onClick={() => regenerate()}
+                                          label="Retry"
+                                        >
+                                          <RefreshCcwIcon className="size-4" />
+                                        </Action>
+                                        <Action
+                                          onClick={() =>
+                                            navigator.clipboard.writeText(
+                                              part.text
+                                            )
+                                          }
+                                          label="Copy"
+                                        >
+                                          <CopyIcon className="size-4" />
+                                        </Action>
+                                      </Actions>
+                                    )}
+                                </div>
+                              );
+
+                            default:
+                              return null;
+                          }
+                        })}
+                      </MessageContent>
+
+                      {message.role === "user" && (
+                        <Avatar>
+                          <AvatarImage
+                            src={
+                              user?.image ||
+                              "https://avatar.iran.liara.run/public/32"
+                            }
+                            alt="avatar"
+                          />
+                          <AvatarFallback>CN</AvatarFallback>
+                        </Avatar>
+                      )}
+                    </div>
+                  </Message>
+                </div>
+              ))}
+              {status === "submitted" && <Loader />}
+            </ConversationContent>
+            <ConversationScrollButton />
+          </Conversation>
+
+          {/* {isLoading && (
             <div className="flex justify-center items-center gap-2 bg-neutral-800 px-4 py-4 rounded-2xl max-w-[10%] text-neutral-400 mr-auto rounded-bl-none shadow-md">
               <BeatLoader size={9} color="#9CA3AF" />
             </div>
-          )}
+          )} */}
 
-          <div ref={messagesEndRef} />
+          {/* <div ref={messagesEndRef} /> */}
         </div>
       )}
 
       {/* Input */}
-      <form
-        onSubmit={handleSubmit(onSubmit)}
-        className="p-4 flex items-center gap-2"
+      <PromptInput
+        onSubmit={handleSubmit}
+        className="p-4 flex items-center gap-2 "
       >
-        <Controller
-          name="input"
-          control={control}
-          render={({ field }) => (
-            <Input
-              type="text"
-              placeholder={`${
-                !contextCreated
-                  ? "Upload file to start chatting"
-                  : "Start Typing..."
-              }`}
-              className="p-5 text-base  bg-neutral-800 text-white border-none focus:ring-2 focus:ring-blue-500 rounded-lg"
-              {...field}
-              disabled={!contextCreated || isLoading}
-            />
-          )}
+        <PromptInputTextarea
+          onChange={(e) => setInput(e.target.value)}
+          placeholder={`${
+            !contextCreated
+              ? "Upload file to start chatting"
+              : "Start Typing..."
+          }`}
+          disabled={!contextCreated}
+          value={input}
+          className="px-4 text-base min-h-[10px]   text-white border-none bg-red-700 focus:ring-2 focus:ring-blue-500 rounded-lg"
         />
-        <Button
-          size="icon"
-          type="submit"
-          disabled={isLoading || !contextCreated}
-          className="bg-blue-600 hover:bg-blue-700 text-white rounded-lg shadow"
-        >
-          <Send className="w-5 h-5" />
-        </Button>
-      </form>
+
+        <div className="p-2">
+          <PromptInputSubmit
+            className="bg-blue-600 hover:bg-blue-700 text-white rounded-lg shadow"
+            disabled={!input}
+            status={status}
+          />
+        </div>
+      </PromptInput>
     </div>
   );
 };

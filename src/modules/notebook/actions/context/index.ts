@@ -4,12 +4,18 @@ import { ApiResponse } from "@/utils/ApiResponse";
 import { ContextIndexingType } from "@/types/context.type";
 import { db } from "@/db";
 import { Source } from "../../components/sourceBox";
+import { currentUser } from "@/modules/authentication/actions";
 
 
-export const addContext = async ({ source, userSessionId }: ContextIndexingType) => {
+export const addContext = async ({ source, chatSessionId }: ContextIndexingType) => {
   try {
-    if (!userSessionId) {
-      throw new ApiError("Missing user session ID", 400);
+    if (!chatSessionId) {
+      throw new ApiError("Missing chat session ID", 400);
+    }
+
+    const user = await currentUser();
+    if(!user){
+      throw new ApiError("Unauthorized Request",400)
     }
 
     const { title, sourceType, size, charLength, url, qdrantCollection } = source;
@@ -22,7 +28,12 @@ export const addContext = async ({ source, userSessionId }: ContextIndexingType)
         charLength,
         url,
         qdrantCollection,
-        userId: userSessionId,
+        userId:user.id,
+        chatSessions:{
+          connect:{
+            id:chatSessionId
+          }
+        }
       },
     });
 

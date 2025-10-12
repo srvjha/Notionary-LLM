@@ -14,7 +14,7 @@ import {
 } from "lucide-react";
 import { UploadFormData } from "@/types/upload.type";
 import toast from "react-hot-toast";
-import { BeatLoader, ClipLoader } from "react-spinners";
+import { ClipLoader } from "react-spinners";
 
 import {
   AlertDialog,
@@ -34,13 +34,13 @@ import {
   useWebsiteIndexing,
   useYoutubeIndexing,
 } from "../hooks/notebook";
-import { useGetAllContexts } from "../hooks/context";
-import { useCurrentUser } from "@/modules/authentication/hooks/auth";
+import { ContextSource, SourceType } from "@prisma/client";
 
 interface SourceBoxProps {
   open: boolean;
   setOpen: (open: boolean) => void;
   contextCreated: boolean;
+  contexts: ContextSource[];
   setContextCreated: (created: boolean) => void;
 }
 export interface Source {
@@ -51,10 +51,11 @@ export interface Source {
 const SourceBox = ({
   open,
   setOpen,
+  contexts: UserContexts,
   contextCreated,
   setContextCreated,
 }: SourceBoxProps) => {
-  const [sources, setSources] = useState<Source[]>([]);
+  const [sources, setSources] = useState<Partial<ContextSource>[]>([]);
   const { mutateAsync: uploadWebsite, isPending: isUploadingWebsite } =
     useWebsiteIndexing();
   const { mutateAsync: uploadText, isPending: isUploadingText } =
@@ -64,39 +65,39 @@ const SourceBox = ({
   const { mutateAsync: uploadPdf, isPending: isUploadingPdf } =
     usePdfIndexing();
 
-  const { data: user } = useCurrentUser();
-  const userId = user?.id;
-  const { data: contexts, isLoading: isContextsLoading } =
-    useGetAllContexts(userId);
+ useEffect(() => {
+  if (UserContexts.length > 0) {
+    setSources(UserContexts);
+  }
+}, [UserContexts.length]);
 
-  useEffect(() => {
-    if (contexts) {
-      setSources(contexts);
-    }
-  }, [contexts]);
 
   const handleFilesSelected = async (formData: UploadFormData) => {
     const pdfFileName = formData.get("pdf")?.name;
     const isExisting = sources.some(
-      (source) => source.title === pdfFileName && source.type === "pdf"
+      (source) =>
+        source.title === pdfFileName && source.sourceType === SourceType.PDF
     );
     if (isExisting) {
       toast.error("This PDF is already added!");
       return;
     }
     if (pdfFileName) {
-      setSources((prev) => [...prev, { title: pdfFileName, type: "pdf" }]);
+      setSources((prev) => [
+        ...prev,
+        { title: pdfFileName, sourceType: SourceType.PDF },
+      ]);
     }
 
     try {
       const response = await uploadPdf(formData);
       if (response.success) {
         const { fileId } = response.data;
-        console.log({ fileId });
         if (fileId) {
           setSources((prev) =>
             prev.map((source) =>
-              source.title === pdfFileName && source.type === "pdf"
+              source.title === pdfFileName &&
+              source.sourceType === SourceType.PDF
                 ? { ...source, fileID: fileId }
                 : source
             )
@@ -117,7 +118,8 @@ const SourceBox = ({
     const websiteUrl = formData.get("website");
 
     const isExisting = sources.some(
-      (source) => source.title === websiteUrl && source.type === "website"
+      (source) =>
+        source.title === websiteUrl && source.sourceType === SourceType.WEBSITE
     );
     if (isExisting) {
       toast.error("This website is already added!");
@@ -131,11 +133,11 @@ const SourceBox = ({
       const response = await uploadWebsite(formData);
       if (response.success) {
         const { fileId } = response.data;
-        console.log({ fileId });
         if (fileId) {
           setSources((prev) =>
             prev.map((source) =>
-              source.title === websiteUrl && source.type === "website"
+              source.title === websiteUrl &&
+              source.sourceType === SourceType.WEBSITE
                 ? { ...source, fileID: fileId }
                 : source
             )
@@ -155,7 +157,8 @@ const SourceBox = ({
   const handleCopiedText = async (formData: UploadFormData) => {
     const copiedText = formData.get("copiedText");
     const isExisting = sources.some(
-      (source) => source.title === copiedText && source.type === "text"
+      (source) =>
+        source.title === copiedText && source.sourceType === SourceType.TEXT
     );
     if (isExisting) {
       toast.error("This text is already added!");
@@ -169,11 +172,11 @@ const SourceBox = ({
 
       if (response.success) {
         const { fileId } = response.data;
-        console.log({ fileId });
         if (fileId) {
           setSources((prev) =>
             prev.map((source) =>
-              source.title === copiedText && source.type === "text"
+              source.title === copiedText &&
+              source.sourceType === SourceType.TEXT
                 ? { ...source, fileID: fileId }
                 : source
             )
@@ -193,7 +196,8 @@ const SourceBox = ({
   const handleYoutubeText = async (formData: UploadFormData) => {
     const youtubeUrl = formData.get("youtube");
     const isExisting = sources.some(
-      (source) => source.title === youtubeUrl && source.type === "youtube"
+      (source) =>
+        source.title === youtubeUrl && source.sourceType === SourceType.YOUTUBE
     );
     if (isExisting) {
       toast.error("This YouTube video is already added!");
@@ -206,11 +210,11 @@ const SourceBox = ({
       const response = await uploadYoutube(formData);
       if (response.success) {
         const { fileId } = response.data;
-        console.log({ fileId });
         if (fileId) {
           setSources((prev) =>
             prev.map((source) =>
-              source.title === youtubeUrl && source.type === "youtube"
+              source.title === youtubeUrl &&
+              source.sourceType === SourceType.YOUTUBE
                 ? { ...source, fileID: fileId }
                 : source
             )
@@ -233,7 +237,7 @@ const SourceBox = ({
   };
 
   const handleDeleteSource = async (fileId?: string) => {
-    setSources((prev) => prev.filter((source) => source.fileID !== fileId));
+    setSources((prev) => prev.filter((source) => source.id !== fileId));
     toast.success("Source deleted successfully");
   };
 
@@ -271,10 +275,10 @@ const SourceBox = ({
       </div>
 
       <div className="p-1.5">
-        {isContextsLoading ? (
+        {false ? (
           <div className="flex justify-center items-center px-4 py-6">
-           <ClipLoader size={28} color="white" />
-           </div>
+            <ClipLoader size={28} color="white" />
+          </div>
         ) : (
           sources.map((source, index) => (
             <div
@@ -282,28 +286,28 @@ const SourceBox = ({
               className="flex items-center gap-2 border rounded-lg p-3 mb-3 mt-1 cursor-pointer transition bg-neutral-900 text-neutral-100"
             >
               <div className="flex gap-2 w-full text-neutral-50 ">
-                {source.type === "pdf" &&
+                {source.sourceType === SourceType.PDF &&
                   (isUploadingPdf ? (
                     <ClipLoader size={24} color="white" />
                   ) : (
                     <SquarePen className="w-5 h-5 mt-0.5 text-white" />
                   ))}
 
-                {source.type === "website" &&
+                {source.sourceType === SourceType.WEBSITE &&
                   (isUploadingWebsite ? (
                     <ClipLoader size={24} color="white" />
                   ) : (
                     <Globe className="w-5 h-5 mt-0.5 text-white" />
                   ))}
 
-                {source.type === "text" &&
+                {source.sourceType === SourceType.TEXT &&
                   (isUploadingText ? (
                     <ClipLoader size={24} color="white" />
                   ) : (
                     <DockIcon className="w-5 h-5 mt-0.5 text-white" />
                   ))}
 
-                {source.type === "youtube" &&
+                {source.sourceType === SourceType.YOUTUBE &&
                   (isUploadingYoutube ? (
                     <ClipLoader size={24} color="white" />
                   ) : (
@@ -314,7 +318,7 @@ const SourceBox = ({
                   <span className="truncate flex">{source.title}</span>
                   <Trash
                     className="w-5 h-5 mt-0.5 text-red-500"
-                    onClick={() => handleDeleteSource(source.fileID)}
+                    onClick={() => handleDeleteSource(source.id)}
                   />
                 </div>
               </div>

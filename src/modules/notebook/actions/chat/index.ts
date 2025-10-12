@@ -1,33 +1,112 @@
 "use server";
 
+import { db } from "@/db";
 import { currentUser } from "@/modules/authentication/actions";
 import { ApiError } from "@/utils/ApiError";
-import { validateChat } from "@/validators/chat.validator";
-import { chat } from "../../rag/retrieval";
-import { ApiResponse } from "@/utils/ApiResponse";
+import { convertDbMessagesToUI, convertUIMessageToDB } from "@/utils/chat";
+import { ChatSessionStatus, ContextSource, Message, MessageRole } from "@prisma/client";
+import { UIMessage } from "ai";
 
-export const chatWithDocs = async (userQuery: string) => {
+
+export const createChatSession = async () => {
   try {
-    const session = await currentUser();
-    if (!session) {
-      throw new ApiError("Unauthorized", 401);
-    }
-    const userSessionId = session.id;
-    const validate = validateChat({ userQuery, userSessionId });
-    if (!validate.success) {
-      throw new ApiError(`Invalid request:${validate.error}`, 400);
+    const currentUserSession = await currentUser();
+    if (!currentUserSession) {
+      throw new ApiError("Current User Session Not Found", 400);
     }
 
-    const modelResponse = await chat(userQuery, userSessionId);
-    return new ApiResponse(
-      200,
-      {
-        reply: modelResponse,
+    const { id } = currentUserSession;
+    const createChat = await db.chatSession.create({
+      data: {
+        userId: id,
       },
-      "Chat response successfully generated ✅"
-    ).toJSON();
-  } catch (error) {
-    console.error("Error in chatWithDocs:", error);
-    throw error;
+    });
+
+    return createChat;
+  } catch (error: any) {
+    console.log("Error while creating chat session: ", error.message);
+    return null;
   }
 };
+
+export const getLastActiveChatSession = async () => {
+  try {
+    const currentUserSession = await currentUser();
+    if (!currentUserSession) {
+      throw new ApiError("Current User Session Not Found", 400);
+    }
+    const { id: userId } = currentUserSession;
+
+    const session = await db.chatSession.findFirst({
+      where: {
+        userId: userId,
+        chatSessionStatus: ChatSessionStatus.ACTIVE,
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+    });
+    return session;
+  } catch (error: any) {
+    console.log("Error while fetching Session", error.message);
+    return null;
+  }
+};
+
+export const getContextAndMessagesFromChatSessionById = async(chatSessionId:string)=>{
+   const chatSession = await db.chatSession.findUnique({
+    where: { id: chatSessionId },
+    select: {
+      contexts: true,
+      messages: true,
+    },
+  });
+
+  if (!chatSession) {
+    throw new ApiError("Chat session not found", 404);
+  }
+
+  const messages = convertDbMessagesToUI(chatSession.messages);
+  const contexts = chatSession.contexts as ContextSource[];
+
+  console.log({messages,contexts})
+
+  return { messages, contexts };
+}
+
+
+export const saveAIResponse = async (
+  chatSessionId: string,
+  aiMessages: UIMessage | UIMessage[]
+) => {
+  const messagesArray = Array.isArray(aiMessages) ? aiMessages : [aiMessages];
+
+  const dbMessages = messagesArray.map((m) =>
+    convertUIMessageToDB(m, chatSessionId)
+  );
+
+  // Bulk insert
+  const created = await db.message.createMany({
+    data: dbMessages,
+  });
+
+  return created;
+};
+
+export const addMessages = async({chatSessionId,role,content}:Partial<Message>)=>{
+  // validation baadme waise bhi server action function hai public nhi hai
+  if(!chatSessionId || !role || !content){
+     throw new ApiError("Missing fields required",400)
+  }
+  const createMessage = await db.message.create({
+    data:{
+      chatSessionId,
+      role,
+      content
+    }
+  })
+  return createMessage;
+}
+
+
+
