@@ -21,8 +21,8 @@ export function useAddContext() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ source, userSessionId }: ContextIndexingType) =>
-      addContext({ source, userSessionId }),
+    mutationFn: ({ source, chatSessionId }: ContextIndexingType) =>
+      addContext({ source, chatSessionId }),
 
     onSuccess: () => {
       // invalidate to refetch the updated list
