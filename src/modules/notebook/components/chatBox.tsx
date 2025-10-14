@@ -19,6 +19,10 @@ import {
   PromptInputTextarea,
 } from "@/components/ai-elements/prompt-input";
 import { useCurrentUser } from "@/modules/authentication/hooks/auth";
+import { useParams } from "next/navigation";
+import { addMessages, clearAllChats } from "../actions/chat";
+import toast from "react-hot-toast";
+import { convertUIMessageToDB } from "@/utils/chat";
 
 interface ChatBoxProps {
   setOpen: (open: boolean) => void;
@@ -28,10 +32,39 @@ interface ChatBoxProps {
 }
 
 const ChatBox = ({ setOpen, contextCreated, UserMessages }: ChatBoxProps) => {
-  let { messages, sendMessage, status, regenerate } = useChat();
+   const { messages: chatMessages, sendMessage, status, regenerate } = useChat();
+  const [allMessages, setAllMessages] = useState<UIMessage[]>(UserMessages || []);
   const [input, setInput] = useState("");
   const { data: user } = useCurrentUser();
+  const params = useParams();
+  const chatSessionId = params.id as string;
 
+   useEffect(() => {
+    if (chatMessages.length > 0) {
+      setAllMessages([...UserMessages, ...chatMessages]);
+    } else if (UserMessages.length > 0) {
+      setAllMessages(UserMessages);
+    }
+  }, [UserMessages.length, chatMessages.length]);
+  
+  useEffect(() => {
+  const saveAssistantMessage = async () => {
+    // Only run when chat is done streaming
+    if (status === "ready") {
+      const lastMessage = chatMessages[chatMessages.length - 1];
+
+      if (lastMessage?.role === "assistant") {
+        console.log("✅ Final assistant message:", lastMessage);
+
+        const dbMsg = convertUIMessageToDB(lastMessage, chatSessionId);
+        console.log("Saving to DB:", dbMsg);
+        await addMessages(dbMsg);
+      }
+    }
+  };
+
+  saveAssistantMessage();
+}, [status]);
 
   const handleSubmit = (message: PromptInputMessage) => {
     const hasText = Boolean(message.text?.trim());
@@ -45,16 +78,27 @@ const ChatBox = ({ setOpen, contextCreated, UserMessages }: ChatBoxProps) => {
     setInput("");
   };
 
+  const handleClearChat = async()=>{
+    setAllMessages([]) // for ui
+    const deleteAllChat =  await clearAllChats(chatSessionId);
+    if(deleteAllChat){
+      toast.success("Cleared All Chats")
+    }
+    else {
+      toast.error("Error occurred while clearing chats")
+    }
+  }
+
   return (
     <div className="w-full h-full flex flex-col text-white rounded-xl shadow-lg">
       {/* Header */}
       <div className="p-4 border-b border-neutral-800 flex justify-between items-center">
         <p className="text-lg font-semibold">Chat</p>
-        {messages.length > 0 && (
+        {allMessages.length > 0 && (
           <Button
             variant="destructive"
             className="cursor-pointer "
-            onClick={() => (messages = [])}
+            onClick={() => handleClearChat()}
           >
             Clear Chat
           </Button>
@@ -78,7 +122,7 @@ const ChatBox = ({ setOpen, contextCreated, UserMessages }: ChatBoxProps) => {
           className="p-4 flex-1 overflow-y-auto space-y-4 scrollbar-thin scrollbar-thumb-neutral-700 scroll-hidden"
           style={{ maxHeight: "420px" }}
         >
-          {messages.length === 0 && (
+          {allMessages.length === 0 && (
             <div className="flex flex-col justify-center items-center h-full text-center text-neutral-400">
               <Brain className="w-12 h-12 text-indigo-200 mb-3" />
               <h2 className="text-xl font-semibold text-white">
@@ -92,7 +136,7 @@ const ChatBox = ({ setOpen, contextCreated, UserMessages }: ChatBoxProps) => {
 
           <Conversation className="h-full rounded-xl">
             <ConversationContent>
-              {messages.map((message) => (
+              {allMessages.length > 0 && allMessages.map((message) => (
                 <div key={message.id}>
                   <Message from={message.role} key={message.id}>
                     <div className="flex items-start space-x-2">
@@ -104,15 +148,15 @@ const ChatBox = ({ setOpen, contextCreated, UserMessages }: ChatBoxProps) => {
                         />
                       )}
 
-                      <MessageContent>
+                      <MessageContent className="max-w-full text-sm py-2">
                         {message.parts.map((part, i) => {
                           switch (part.type) {
                             case "text":
                               const isLastMessage =
-                                messages[messages.length - 1].id === message.id;
+                                allMessages[allMessages.length - 1].id === message.id;
                               return (
                                 <div key={`${message.id}-${i}`}>
-                                  <Response>{part.text}</Response>
+                                  <Response >{part.text}</Response>
                                   {message.role === "assistant" &&
                                     isLastMessage && (
                                       <Actions className="mt-2">

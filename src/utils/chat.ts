@@ -15,7 +15,6 @@ export const convertDbMessagesToUI = (dbMessages: Message[]): UIMessage[] => {
   }));
 };
 
-
 export const convertUIMessageToDB = (
   uiMessage: UIMessage,
   chatSessionId: string
@@ -28,7 +27,7 @@ export const convertUIMessageToDB = (
   if (!uiMessage.role || !uiMessage.parts || !chatSessionId) {
     throw new ApiError("Invalid UIMessage or chatSessionId", 400);
   }
-
+ 
   const roleMap: Record<string, MessageRole> = {
     user: MessageRole.USER,
     assistant: MessageRole.ASSISTANT,

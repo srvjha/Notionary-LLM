@@ -27,8 +27,12 @@ export async function POST(req: Request) {
   }
   const result = await chat(messages, chatSessionId);
 
-  return result.toUIMessageStreamResponse({
+  const stream =  result.toUIMessageStreamResponse({
     sendSources: true,
     sendReasoning: true,
   });
+
+  // console.log("ai response stream: ",stream)
+  return stream
+  
 }
