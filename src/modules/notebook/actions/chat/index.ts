@@ -3,14 +3,9 @@
 import { db } from "@/db";
 import { currentUser } from "@/modules/authentication/actions";
 import { ApiError } from "@/utils/ApiError";
-import { convertDbMessagesToUI, convertUIMessageToDB } from "@/utils/chat";
-import {
-  ChatSessionStatus,
-  ContextSource,
-  Message,
-  MessageRole,
-} from "@prisma/client";
-import { UIMessage } from "ai";
+import { convertDbMessagesToUI } from "@/utils/chat";
+import { ChatSessionStatus, ContextSource, Message } from "@prisma/client";
+
 
 export const createChatSession = async () => {
   try {
