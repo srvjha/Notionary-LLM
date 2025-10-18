@@ -2,6 +2,7 @@ import { db } from "@/db";
 import { env } from "@/lib/env";
 import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
+import { lastLoginMethod } from "better-auth/plugins"
 
 export const auth = betterAuth({
   database: prismaAdapter(db, {
@@ -17,4 +18,7 @@ export const auth = betterAuth({
       clientSecret: env.GOOGLE_CLIENT_SECRET,
     },
   },
+  plugins: [
+        lastLoginMethod() 
+    ]
 });

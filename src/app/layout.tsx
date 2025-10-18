@@ -16,7 +16,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className="dark">
+      <body className="dark bg-gradient-to-br from-slate-950 via-neutral-950 to-slate-900">
         <QueryProvider>
           <Toaster />
           {children}

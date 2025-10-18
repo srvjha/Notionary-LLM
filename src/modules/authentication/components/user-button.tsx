@@ -127,7 +127,7 @@ export default function UserButton({
       <DropdownMenuTrigger asChild>
         <Button
           variant="ghost"
-          className={`relative ${avatarSizes[size]} rounded-full p-0 hover:bg-accent`}
+          className={`relative ${avatarSizes[size]} rounded-full p-0 hover:bg-accent cursor-pointer`}
           disabled={isLoading}
         >
           <Avatar className={avatarSizes[size]}>
