@@ -37,7 +37,14 @@ export const addContext = async ({ source, chatSessionId }: ContextIndexingType)
       },
     });
 
-    return new ApiResponse(200, { context }, "Context added successfully ✅").toJSON();
+    // Serialize dates to strings for RSC compatibility
+    const serializedContext = {
+      ...context,
+      createdAt: context.createdAt?.toISOString(),
+      updatedAt: context.updatedAt?.toISOString(),
+    };
+
+    return new ApiResponse(200, { context: serializedContext }, "Context added successfully ✅").toJSON();
   } catch (error) {
     console.error("Error in addContext:", error);
     throw error;
