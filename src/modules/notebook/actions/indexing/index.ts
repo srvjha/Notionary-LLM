@@ -1,7 +1,6 @@
 "use server";
 
 import { ApiError } from "@/utils/ApiError";
-import { ApiResponse } from "@/utils/ApiResponse";
 import {
   validatePDFIndexing,
   validateTextIndexing,
@@ -47,11 +46,12 @@ export async function handlePdfIndexing(formData: FormData) {
     };
     await safeAddContext(contextData, "pdf");
 
-    return new ApiResponse(
-      200,
-      { fileId: indexingFileId },
-      "PDF File Indexed Successfully ✅"
-    ).toJSON();
+    return {
+      success: true,
+      statusCode: 200,
+      data: { fileId: indexingFileId },
+      message: "PDF File Indexed Successfully ✅",
+    };
   } catch (error) {
     console.error("Error in handlePdfIndexing:", error);
     throw error;
@@ -90,11 +90,12 @@ export async function handleTextIndexing(formData: FormData) {
     };
     await safeAddContext(contextData, "text");
 
-    return new ApiResponse(
-      200,
-      { fileId: indexingFileId },
-      "Text Indexed Successfully ✅"
-    ).toJSON();
+    return {
+      success: true,
+      statusCode: 200,
+      data: { fileId: indexingFileId },
+      message: "Text Indexed Successfully ✅",
+    };
   } catch (error) {
     console.error("Error in handleTextIndexing:", error);
     throw error;
@@ -134,11 +135,12 @@ export async function handleWebsiteIndexing(formData: FormData) {
     };
     await safeAddContext(contextData, "website");
 
-    return new ApiResponse(
-      200,
-      { fileId: indexingFileId },
-      "Website Indexed Successfully ✅"
-    ).toJSON();
+    return {
+      success: true,
+      statusCode: 200,
+      data: { fileId: indexingFileId },
+      message: "Website Indexed Successfully ✅",
+    };
   } catch (error) {
     console.error("Error in handleWebsiteIndexing:", error);
     throw error;
@@ -177,11 +179,12 @@ export async function handleYoutubeIndexing(formData: FormData) {
     };
     await safeAddContext(contextData, "youtube");
 
-    return new ApiResponse(
-      200,
-      { fileId: indexingFileId },
-      "YouTube Video Indexed Successfully ✅"
-    ).toJSON();
+    return {
+      success: true,
+      statusCode: 200,
+      data: { fileId: indexingFileId },
+      message: "YouTube Video Indexed Successfully ✅",
+    };
   } catch (error) {
     console.error("Error in handleYoutubeIndexing:", error);
     throw error;
@@ -193,6 +196,10 @@ async function safeAddContext(contextData: any, label: string) {
   try {
     await addContext(contextData);
   } catch (error: any) {
-    console.log(`Error while adding ${label} to context:`, error.message);
+    // Log error but don't throw - prevent blocking upload response
+    console.error(`Error while adding ${label} to context:`, {
+      message: error.message,
+      stack: error.stack,
+    });
   }
 }
