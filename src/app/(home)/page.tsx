@@ -27,7 +27,7 @@ const Page = () => {
         if (newSession) {
           redirect(`/notebook/${newSession.id}`);
         } else {
-          setLoading(false);
+          redirect("/sign-in");
         }
       }
     } catch (e) {
@@ -39,14 +39,7 @@ const Page = () => {
   return (
     <div className="min-h-screen bg-black text-slate-300 selection:bg-blue-900 selection:text-blue-100">
       <div className="relative overflow-hidden">
-        {/* Subtle glowing orbs for background ambiance */}
-        <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-blue-900/10 blur-[100px] mix-blend-screen"></div>
-          <div className="absolute top-[20%] right-[-10%] w-[30%] h-[50%] rounded-full bg-sky-900/10 blur-[120px] mix-blend-screen"></div>
-          <div className="absolute bottom-[-10%] left-[20%] w-[50%] h-[30%] rounded-full bg-blue-800/10 blur-[120px] mix-blend-screen"></div>
-        </div>
-
-        <div className="relative px-6 pt-24 pb-16 md:pt-32 md:pb-24 flex flex-col items-center justify-center min-h-[70vh]">
+        <div className="relative px-6 pt-24 pb-16 md:pt-16 md:pb-24 flex flex-col items-center justify-center min-h-[70vh]">
           <div className="max-w-4xl mx-auto text-center space-y-8 relative z-10">
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-950/30">
               <Brain className="w-4 h-4 text-blue-400" />
@@ -67,25 +60,24 @@ const Page = () => {
             
             <div className="flex flex-col sm:flex-row justify-center items-center gap-4 pt-10">
               <Button
-                className="w-full sm:w-auto px-8 py-6 text-lg font-medium bg-blue-600 hover:bg-blue-700 text-white shadow-[0_0_25px_rgba(37,99,235,0.4)] hover:shadow-[0_0_35px_rgba(37,99,235,0.6)] transition-all flex items-center justify-center gap-2 disabled:opacity-80 disabled:cursor-not-allowed group rounded-full border-none"
+                className="w-full sm:w-auto px-8 py-6 text-lg font-medium bg-blue-600 hover:bg-blue-700 text-white hover:cursor-pointer  hover:shadow-[0_0_35px_rgba(37,99,235,0.6)] transition-all flex items-center justify-center gap-2 disabled:opacity-80 disabled:cursor-not-allowed group rounded-none border-none"
                 onClick={handleNoteBook}
                 disabled={loading}
               >
                 {loading ? (
                   <>
                     <Loader2 className="animate-spin w-5 h-5 mr-2" />
-                    Starting...
+                    Creating Notebook...
                   </>
                 ) : (
                   <>
                     Get Started
-                    <ArrowRight className="w-5 h-5 transition-transform group-hover:translate-x-1" />
                   </>
                 )}
               </Button>
 
               <Link href="https://youtu.be/3QpY7EyjPXw" target="__blank" className="w-full sm:w-auto">
-                <Button className="w-full sm:w-auto px-8 py-6 text-lg bg-black/40 backdrop-blur-sm text-blue-300 hover:bg-blue-900/20 hover:text-blue-100 shadow-[0_0_20px_rgba(37,99,235,0.1)] hover:shadow-[0_0_30px_rgba(37,99,235,0.2)] border-none cursor-pointer transition-all rounded-full group">
+                <Button className="w-full sm:w-auto px-8 py-6 text-lg bg-black/40 backdrop-blur-sm text-blue-300 hover:bg-blue-900/20 hover:text-blue-100 shadow-[0_0_20px_rgba(37,99,235,0.1)] hover:shadow-[0_0_30px_rgba(37,99,235,0.2)] border-none cursor-pointer transition-all rounded-none group">
                   <Play className="w-4 h-4 mr-2 text-blue-400 group-hover:text-blue-300" />
                   Watch Demo
                 </Button>

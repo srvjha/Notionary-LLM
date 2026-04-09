@@ -54,11 +54,11 @@ const SignIn = () => {
       </div>
       
       <div className="relative flex flex-col items-center gap-8 w-full max-w-md z-10">
-        <Link href="/" className="text-4xl font-extrabold tracking-tight text-transparent bg-clip-text bg-gradient-to-br from-blue-100 to-blue-600 hover:opacity-80 transition-opacity cursor-pointer drop-shadow-[0_0_10px_rgba(37,99,235,0.2)]">
+        <Link href="/" className="text-4xl font-extrabold tracking-tight text-transparent bg-clip-text bg-gradient-to-br from-neutral-50 to-neutral-400 hover:opacity-80 transition-opacity cursor-pointer drop-shadow-[0_0_10px_rgba(37,99,235,0.2)]">
           Notionary LLM
         </Link>
         
-        <div className="w-full bg-black/40 border-none rounded-2xl shadow-[0_10px_50px_rgba(30,58,138,0.15)] overflow-hidden backdrop-blur-md relative">
+        <div className="w-full bg-black/40 border-none rounded-2xl shadow-xs shadow-blue-500/20  overflow-hidden backdrop-blur-md relative">
           <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-blue-500/50 to-transparent"></div>
           
           <div className="p-8 space-y-8">

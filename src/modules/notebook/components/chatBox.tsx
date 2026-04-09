@@ -81,8 +81,7 @@ const ChatBox = ({ setOpen, contextCreated, UserMessages }: ChatBoxProps) => {
 
   return (
     <div className="w-full h-full flex flex-col text-white rounded-xl shadow-lg">
-      {/* Header */}
-      <div className="p-4 border-b border-neutral-800 flex justify-between items-center">
+      <div className="h-16 px-4 flex justify-between items-center border-b border-neutral-100/20 flex-shrink-0">
         <p className="text-lg font-semibold">Chat</p>
         {hasMessages && (
           <Button className="cursor-pointer" variant="destructive" onClick={handleClearChat}>
@@ -104,7 +103,7 @@ const ChatBox = ({ setOpen, contextCreated, UserMessages }: ChatBoxProps) => {
           <p className="text-sm text-neutral-500 mt-1">Drag and Drop files</p>
         </div>
       ) : (
-        <div className="p-4 flex-1 overflow-y-auto space-y-4 scrollbar-thin scrollbar-thumb-neutral-700 scroll-hidden max-h-[420px]">
+        <div className="p-4 flex-1 overflow-y-auto space-y-4 scrollbar-thin scrollbar-thumb-neutral-700 scroll-hidden">
           {!hasMessages ? (
             <div className="flex flex-col justify-center items-center h-full text-center text-neutral-400">
               <Brain className="w-12 h-12 text-indigo-200 mb-3" />
@@ -162,7 +161,7 @@ const ChatBox = ({ setOpen, contextCreated, UserMessages }: ChatBoxProps) => {
                           <AvatarImage
                             src={
                               user?.image ||
-                              "https://avatar.iran.liara.run/public/32"
+                              "https://res.cloudinary.com/sauravjha/image/upload/v1775739665/ChatGPT_Image_Apr_9_2026_06_30_49_PM_ntgpnp.png"
                             }
                             alt="avatar"
                           />
@@ -191,7 +190,7 @@ const ChatBox = ({ setOpen, contextCreated, UserMessages }: ChatBoxProps) => {
               : "Start typing..."
           }
           disabled={!contextCreated}
-          className="px-4 text-base text-white border-none bg-red-700 focus:ring-2 focus:ring-blue-500 rounded-lg"
+          className="px-4 text-base text-white border-none bg-neutral-800/80 focus:ring-2 focus:ring-blue-500 rounded-lg"
         />
         <div className="p-2">
           <PromptInputSubmit

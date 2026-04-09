@@ -1,5 +1,4 @@
 import { currentUser } from '@/modules/authentication/actions';
-import Header from '@/modules/layout/components/header'
 import { auth } from '@/utils/auth';
 import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
@@ -14,8 +13,7 @@ const ChatLayout = async({children}:{children:React.ReactNode}) => {
       redirect("/sign-in");
     }
   return (
-    <div>
-      <Header user={user!}/>
+    <div className="h-screen w-full bg-black overflow-hidden flex flex-col text-slate-300">
       {children}
     </div>
   )
