@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import { Github } from "lucide-react";
+import { Github, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -8,18 +8,20 @@ import { authClient } from "@/lib/auth-client";
 import toast from "react-hot-toast";
 
 const SignIn = () => {
-   const lastMethod = authClient.getLastUsedLoginMethod();
-  console.log({lastMethod})
+  const lastMethod = authClient.getLastUsedLoginMethod();
+  const [loadingProvider, setLoadingProvider] = useState<"github" | "google" | null>(null);
+
   const handleSignIn = async (provider: "github" | "google") => {
+    setLoadingProvider(provider);
     try {
       await authClient.signIn.social({
         provider,
         callbackURL: "/",
       });
-     
     } catch (error) {
       console.error("Error during sign-in:", error);
       toast.error("Failed to sign in. Please try again.");
+      setLoadingProvider(null);
     }
   };
 
@@ -45,36 +47,44 @@ const SignIn = () => {
   );
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-transparent">
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-neutral-900 via-neutral-950 to-black opacity-80"></div>
+    <div className="min-h-screen flex items-center justify-center p-4 bg-black selection:bg-blue-900 selection:text-blue-100">
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] rounded-full bg-blue-900/10 blur-[130px] mix-blend-screen"></div>
+        <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[50%] rounded-full bg-blue-800/10 blur-[100px] mix-blend-screen"></div>
+      </div>
       
-      <div className="relative flex flex-col items-center gap-8 w-full max-w-md">
-        <Link href="/" className="text-4xl font-light tracking-tight text-neutral-300 hover:text-white transition-colors cursor-pointer">
+      <div className="relative flex flex-col items-center gap-8 w-full max-w-md z-10">
+        <Link href="/" className="text-4xl font-extrabold tracking-tight text-transparent bg-clip-text bg-gradient-to-br from-blue-100 to-blue-600 hover:opacity-80 transition-opacity cursor-pointer drop-shadow-[0_0_10px_rgba(37,99,235,0.2)]">
           Notionary LLM
         </Link>
         
-        <div className="w-full bg-white rounded-lg shadow-2xl shadow-black/50 overflow-hidden backdrop-blur-sm flex justify-center items-center">
-          <div className="p-8 space-y-6">
-            <div className="space-y-2 text-center">
-              <h1 className="text-2xl font-bold tracking-tight text-gray-900">
-                Sign In
+        <div className="w-full bg-black/40 border-none rounded-2xl shadow-[0_10px_50px_rgba(30,58,138,0.15)] overflow-hidden backdrop-blur-md relative">
+          <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-blue-500/50 to-transparent"></div>
+          
+          <div className="p-8 space-y-8">
+            <div className="space-y-3 text-center">
+              <h1 className="text-3xl font-bold tracking-tight text-blue-50">
+                Welcome Back
               </h1>
-              <p className="text-sm text-gray-600">
-                Continue securely using your preferred account
+              <p className="text-sm text-blue-200/60 font-medium">
+                Sign in securely to access your intelligent notebook
               </p>
             </div>
 
-            <div className="space-y-8 pt-2">
+            <div className="space-y-4 pt-2">
               <Button
                 onClick={() => handleSignIn("github")}
-                className="w-full cursor-pointer flex items-center justify-center gap-3 px-2 py-3 rounded-lg font-medium transition-all duration-200 
-                bg-white text-neutral-900 border-b-2 border-t-1 border-l-1 border-r-1 border-l-neutral-300 border-r-neutral-300 border-t-neutral-300 border-b-neutral-900  hover:bg-black hover:text-neutral-100 hover:shadow-md
-                "
+                disabled={loadingProvider !== null}
+                className="w-full flex items-center justify-center gap-3 px-4 py-6 rounded-xl font-medium transition-all duration-300 bg-blue-900/20 text-blue-100 border-none shadow-[0_4px_20px_rgba(30,58,138,0.15)] hover:bg-blue-900/40 hover:shadow-[0_4px_25px_rgba(30,58,138,0.3)] disabled:opacity-50"
               >
-                <Github className="h-5 w-5" />
+                {loadingProvider === "github" ? (
+                  <Loader2 className="h-5 w-5 animate-spin text-blue-400" />
+                ) : (
+                  <Github className="h-5 w-5 text-blue-100" />
+                )}
                 <span>Continue with GitHub</span>
                 {lastMethod === "github" && (
-                  <Badge className="ml-10 -mt-10">
+                  <Badge className="absolute right-10 bg-blue-600/20 text-blue-300 border-none hover:bg-blue-600/30">
                     Last used
                   </Badge>
                 )}
@@ -82,22 +92,24 @@ const SignIn = () => {
 
               <Button
                 onClick={() => handleSignIn("google")}
-              
-                className="w-full cursor-pointer flex items-center justify-center gap-3 px-2 py-3 rounded-lg font-medium transition-all duration-200 
-                     bg-white text-gray-900 border-b-2 border-t-1 border-l-1 border-r-1 border-l-neutral-300 border-r-neutral-300 border-t-neutral-300 border-b-blue-800 hover:bg-blue-400 hover:text-white  hover:shadow-md
-                "
+                disabled={loadingProvider !== null}
+                className="w-full flex items-center justify-center gap-3 px-4 py-6 rounded-xl font-medium transition-all duration-300 bg-blue-900/20 text-blue-100 border-none shadow-[0_4px_20px_rgba(30,58,138,0.15)] hover:bg-blue-900/40 hover:shadow-[0_4px_25px_rgba(30,58,138,0.3)] disabled:opacity-50"
               >
-                <GoogleIcon />
+                {loadingProvider === "google" ? (
+                  <Loader2 className="h-5 w-5 animate-spin text-blue-400" />
+                ) : (
+                  <GoogleIcon />
+                )}
                 <span>Continue with Google</span>
-                { lastMethod === "google" && (
-                  <Badge  variant="secondary"  className="ml-10 -mt-10">
+                {lastMethod === "google" && (
+                  <Badge className="absolute right-10 bg-blue-600/20 text-blue-300 border-none hover:bg-blue-600/30">
                     Last used
                   </Badge>
                 )}
               </Button>
             </div>
 
-            <div className="pt-4 flex items-center justify-center gap-2 text-xs text-gray-500">
+            <div className="pt-4 flex items-center justify-center gap-2 text-xs text-blue-400/50 font-medium">
               <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
               </svg>
@@ -106,15 +118,15 @@ const SignIn = () => {
           </div>
         </div>
 
-        <p className="text-center text-sm text-neutral-500">
+        <p className="text-center text-sm text-blue-200/40">
           By continuing, you agree to our{" "}
-          <a href="#" className="text-neutral-400 hover:text-white underline underline-offset-2 transition-colors">
+          <Link href="#" className="text-blue-400/70 hover:text-blue-300 underline underline-offset-4 transition-colors">
             Terms
-          </a>{" "}
+          </Link>{" "}
           and{" "}
-          <a href="#" className="text-neutral-400 hover:text-white underline underline-offset-2 transition-colors">
+          <Link href="#" className="text-blue-400/70 hover:text-blue-300 underline underline-offset-4 transition-colors">
             Privacy Policy
-          </a>
+          </Link>
         </p>
       </div>
     </div>
