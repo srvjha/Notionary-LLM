@@ -11,6 +11,7 @@ import { env } from "@/lib/env";
 const client = new QdrantClient({
   url: env.QDRANT_URL,
   apiKey: env.QDRANT_API_KEY,
+  checkCompatibility: false,
 });
 
 export const textIndexing = async (

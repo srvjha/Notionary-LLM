@@ -244,8 +244,7 @@ const SourceBox = ({
   return (
     <div className="h-full flex flex-col">
       {/* Sources Header  */}
-      <div className="p-4 border-b border-neutral-800 flex justify-between items-center">
-        <p className="text-lg font-semibold">Sources</p>
+      <div className="p-4 flex justify-between items-center">
         <AlertDialog>
           <AlertDialogTrigger asChild>
             <Button
@@ -336,11 +335,11 @@ const SourceBox = ({
         </div>
       ) : null}
 
-      <div className="p-4 border-t border-neutral-700">
+      <div className="p-4 mt-auto">
         <UploadSourcesModal
           trigger={
             <Button className="w-full text-base cursor-pointer flex items-center gap-2">
-              Add
+              Add Sources
               <PlusCircle className="size-[20px]" />
             </Button>
           }

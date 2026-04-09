@@ -33,7 +33,7 @@ export const inputTypes = [
     ],
   },
   {
-    icon: <Globe className="w-10 h-10 text-green-400" />,
+    icon: <Globe className="w-10 h-10 text-blue-500" />,
     title: "Website URLs",
     description: "Articles, blogs, documentation, web pages",
     details: [
@@ -55,7 +55,7 @@ export const inputTypes = [
     ],
   },
   {
-    icon: <Copy className="w-10 h-10 text-purple-400" />,
+    icon: <Copy className="w-10 h-10 text-blue-300" />,
     title: "Copied Text",
     description: "Emails, notes, articles, any text content",
     details: [
@@ -77,7 +77,7 @@ export const inputTypes = [
     ],
   },
   {
-    icon: <Video className="w-10 h-10 text-red-400" />,
+    icon: <Video className="w-10 h-10 text-blue-600" />,
     title: "YouTube Videos",
     description: "Educational content, tutorials, lectures",
     details: [
@@ -108,18 +108,18 @@ export const features = [
       "Retrieval-Augmented Generation ensures accurate, source-backed answers",
   },
   {
-    icon: <Search className="w-10 h-10 text-green-400" />,
+    icon: <Search className="w-10 h-10 text-blue-500" />,
     title: "Smart Search",
     description:
       "AI understands context and finds relevant information across all your documents",
   },
   {
-    icon: <HelpCircle className="w-10 h-10 text-purple-400" />,
+    icon: <HelpCircle className="w-10 h-10 text-blue-300" />,
     title: "Source Attribution",
     description: "Every answer shows exactly where the information came from",
   },
   {
-    icon: <Zap className="w-10 h-10 text-yellow-400" />,
+    icon: <Zap className="w-10 h-10 text-blue-600" />,
     title: "Instant Responses",
     description: "Get answers in seconds, not minutes of manual searching",
   },

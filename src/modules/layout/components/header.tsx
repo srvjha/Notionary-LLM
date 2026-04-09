@@ -1,19 +1,17 @@
-
 import Link from "next/link";
 import UserButton from "@/modules/authentication/components/user-button";
 import { Button } from "@/components/ui/button";
 import { UserProps } from "@/types/user.type";
 
 const Header = async ({user}:{user:UserProps}) => {
-
   return (
-    <header className="w-full shadow-sm border-b border-b-white/10 backdrop-blur-md sticky top-0 z-50">
-      <div className="max-w-7xl mx-auto flex items-center justify-between px-3 py-3">
-        <div className="flex items-center gap-2">
-          <img src="/favicon.ico" alt="Logo" className="w-9 h-9" />
+    <header className="w-full bg-transparent backdrop-blur-xl sticky top-0 z-50">
+      <div className="max-w-7xl mx-auto flex items-center justify-between px-4 py-4">
+        <div className="flex items-center gap-3">
+          <img src="/favicon.ico" alt="Logo" className="w-[38px] h-[38px] rounded-lg shadow-sm" />
           <Link
             href="/"
-            className="text-lg font-semibold text-gray-900 dark:text-white"
+            className="text-xl font-bold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-neutral-100 to-neutral-400 hover:opacity-80 transition-opacity"
           >
             Notionary LLM
           </Link>
@@ -24,7 +22,9 @@ const Header = async ({user}:{user:UserProps}) => {
             <UserButton user={user} />
           ) : (
             <Link href="/sign-in">
-              <Button className="cursor-pointer">Sign In</Button>
+              <Button className="cursor-pointer bg-blue-600 text-white hover:bg-blue-700 transition-all shadow-[0_4px_20px_rgba(30,58,138,0.2)] hover:shadow-[0_4px_25px_rgba(30,58,138,0.4)] font-medium px-6 rounded-none border-none">
+                Sign In
+              </Button>
             </Link>
           )}
         </div>

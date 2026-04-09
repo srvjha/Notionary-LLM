@@ -1,7 +1,10 @@
 import type { Metadata } from "next";
+import { Space_Grotesk } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "react-hot-toast";
 import { QueryProvider } from "@/components/providers/query";
+
+const spaceGrotesk = Space_Grotesk({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: "Notionary LLM - Your AI-Powered Notebook Assistant",
@@ -16,7 +19,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className="dark bg-gradient-to-br from-slate-950 via-neutral-950 to-slate-900">
+      <body className={`dark bg-black ${spaceGrotesk.className}`}>
         <QueryProvider>
           <Toaster />
           {children}

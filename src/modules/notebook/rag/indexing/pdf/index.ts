@@ -12,6 +12,7 @@ import { env } from "@/lib/env";
 const client = new QdrantClient({
   url: env.QDRANT_URL,
   apiKey: env.QDRANT_API_KEY,
+  checkCompatibility: false,
 });
 
 export const pdfIndexing = async (pdf: File, chatSessionId: string) => {
