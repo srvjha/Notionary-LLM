@@ -6,12 +6,16 @@ import {
   ConversationContent,
   ConversationScrollButton,
 } from "@/components/ai-elements/conversation";
-import { Message, MessageContent } from "@/components/ai-elements/message";
 import { Response } from "@/components/ai-elements/response";
 import { Action, Actions } from "@/components/ai-elements/actions";
-import { RefreshCcwIcon, CopyIcon, Upload, Brain } from "lucide-react";
+import {
+  RefreshCcwIcon,
+  CopyIcon,
+  Upload,
+  Sparkles,
+  Trash2,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   PromptInput,
   PromptInputMessage,
@@ -24,6 +28,7 @@ import { useParams } from "next/navigation";
 import toast from "react-hot-toast";
 import { addMessages, clearAllChats } from "../actions/chat";
 import { convertUIMessageToDB } from "@/utils/chat";
+import { cn } from "@/lib/utils";
 
 interface ChatBoxProps {
   setOpen: (open: boolean) => void;
@@ -31,6 +36,13 @@ interface ChatBoxProps {
   UserMessages: UIMessage[];
   contextCreated: boolean;
 }
+
+const SUGGESTED_PROMPTS = [
+  "Summarize the key points",
+  "List the main arguments",
+  "What are the open questions?",
+  "Give me three takeaways",
+];
 
 const ChatBox = ({ setOpen, contextCreated, UserMessages }: ChatBoxProps) => {
   const { messages, sendMessage, status, regenerate, setMessages } = useChat();
@@ -65,12 +77,17 @@ const ChatBox = ({ setOpen, contextCreated, UserMessages }: ChatBoxProps) => {
     setInput("");
   };
 
+  const handleSuggestion = (prompt: string) => {
+    if (!contextCreated) return;
+    sendMessage({ text: prompt });
+  };
+
   const handleClearChat = async () => {
     try {
       setMessages([]);
       const deleted = await clearAllChats(chatSessionId);
-      if (deleted) toast.success("Cleared All Chats");
-      else toast.error("Error occurred while clearing chats");
+      if (deleted) toast.success("Chat cleared");
+      else toast.error("Couldn’t clear chat");
     } catch (err) {
       console.error(err);
       toast.error("Failed to clear chats");
@@ -78,100 +95,154 @@ const ChatBox = ({ setOpen, contextCreated, UserMessages }: ChatBoxProps) => {
   };
 
   const hasMessages = messages.length > 0;
+  const isStreaming = status === "submitted" || status === "streaming";
 
   return (
-    <div className="w-full h-full flex flex-col text-white rounded-xl shadow-lg">
-      <div className="h-16 px-4 flex justify-between items-center border-b border-neutral-100/20 flex-shrink-0">
-        <p className="text-lg font-semibold">Chat</p>
+    <div className="w-full h-full flex flex-col">
+      {/* Header */}
+      <div className="h-14 px-5 flex justify-between items-center border-b border-stone-900/80 flex-shrink-0">
+        <div className="flex items-center gap-2.5">
+          <div className="w-1.5 h-1.5 rounded-full bg-amber-400 shadow-[0_0_8px_rgba(251,191,36,0.6)]" />
+          <p className="text-sm font-medium text-stone-200 tracking-tight">
+            Chat
+          </p>
+          {contextCreated && (
+            <span className="text-[10px] uppercase tracking-[0.16em] text-stone-500 ml-1">
+              · grounded
+            </span>
+          )}
+        </div>
         {hasMessages && (
-          <Button className="cursor-pointer" variant="destructive" onClick={handleClearChat}>
-            Clear Chat
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={handleClearChat}
+            className="h-7 px-2 text-xs text-stone-500 hover:text-amber-400 hover:bg-stone-900 cursor-pointer"
+          >
+            <Trash2 className="w-3.5 h-3.5 mr-1" />
+            Clear
           </Button>
         )}
       </div>
 
-      {/* Chat Content */}
+      {/* Body */}
       {!contextCreated ? (
-        <div
-          className="flex-1 flex flex-col items-center justify-center text-center p-4"
+        <button
+          type="button"
           onClick={() => setOpen(true)}
+          className="flex-1 flex flex-col items-center justify-center text-center px-6 cursor-pointer group"
         >
-          <div className="bg-blue-600/20 p-4 rounded-full mb-3">
-            <Upload className="w-6 h-6 text-blue-500" />
+          <div className="w-16 h-16 rounded-full bg-stone-900 border border-stone-800 flex items-center justify-center mb-5 group-hover:border-amber-400/40 transition-colors">
+            <Upload className="w-6 h-6 text-stone-400 group-hover:text-amber-400 transition-colors" />
           </div>
-          <p className="text-lg font-medium">Upload a file to get started</p>
-          <p className="text-sm text-neutral-500 mt-1">Drag and Drop files</p>
-        </div>
+          <p className="text-base font-medium text-stone-200">
+            Add a source to begin
+          </p>
+          <p className="text-sm text-stone-500 mt-1.5 max-w-sm leading-relaxed">
+            Drop in a PDF, paste a URL or article, or link a YouTube video.
+            Then ask anything about it.
+          </p>
+        </button>
       ) : (
-        <div className="p-4 flex-1 overflow-y-auto space-y-4 scrollbar-thin scrollbar-thumb-neutral-700 scroll-hidden">
+        <div className="flex-1 overflow-hidden relative">
           {!hasMessages ? (
-            <div className="flex flex-col justify-center items-center h-full text-center text-neutral-400">
-              <Brain className="w-12 h-12 text-indigo-200 mb-3" />
-              <h2 className="text-xl font-semibold text-white">
-                Welcome to Chat
+            <div className="absolute inset-0 flex flex-col items-center justify-center px-6 text-center">
+              <div className="w-12 h-12 rounded-full bg-amber-400/10 border border-amber-400/20 flex items-center justify-center mb-4">
+                <Sparkles className="w-5 h-5 text-amber-400" />
+              </div>
+              <h2 className="text-lg font-medium text-stone-100 tracking-tight">
+                Ask your sources anything
               </h2>
-              <p className="text-sm text-neutral-500 mt-1">
-                Ask a question or upload a source to begin.
+              <p className="text-sm text-stone-500 mt-1.5 max-w-md">
+                Try one of these to get started, or write your own question.
               </p>
+              <div className="grid sm:grid-cols-2 gap-2 mt-6 w-full max-w-xl">
+                {SUGGESTED_PROMPTS.map((p) => (
+                  <button
+                    key={p}
+                    onClick={() => handleSuggestion(p)}
+                    className={cn(
+                      "text-left text-sm text-stone-300 leading-relaxed",
+                      "px-3.5 py-3 rounded-md border border-stone-800/80 bg-stone-900/30",
+                      "hover:bg-stone-900 hover:border-stone-700 hover:text-stone-100",
+                      "transition-colors cursor-pointer"
+                    )}
+                  >
+                    {p}
+                  </button>
+                ))}
+              </div>
             </div>
           ) : (
-            <Conversation className="h-full rounded-xl">
-              <ConversationContent>
-                {messages.map((message) => (
-                  <Message from={message.role} key={message.id}>
-                    <div className="flex items-start space-x-2">
-                      {message.role === "assistant" && (
-                        <img
-                          className="w-8 h-8 rounded-full"
-                          src="https://avatar.iran.liara.run/public/32"
-                          alt="assistant"
-                        />
-                      )}
-
-                      <MessageContent className="max-w-full text-sm py-2">
+            <Conversation className="h-full">
+              <ConversationContent className="max-w-3xl mx-auto px-5 py-6 space-y-7">
+                {messages.map((message, mi) => {
+                  const isUser = message.role === "user";
+                  const isLast = mi === messages.length - 1;
+                  return (
+                    <div key={message.id} className="space-y-2">
+                      <div className="flex items-center gap-2">
+                        <span
+                          className={cn(
+                            "text-[10px] uppercase tracking-[0.16em] font-medium",
+                            isUser ? "text-stone-500" : "text-amber-400/80"
+                          )}
+                        >
+                          {isUser ? user?.name?.split(" ")[0] || "You" : "Notionary"}
+                        </span>
+                        <div className="flex-1 h-px bg-stone-900/80" />
+                      </div>
+                      <div
+                        className={cn(
+                          "text-[15px] leading-relaxed",
+                          isUser ? "text-stone-200" : "text-stone-100"
+                        )}
+                      >
                         {message.parts.map((part, i) => {
                           if (part.type !== "text") return null;
-                          const isLast =
-                            messages[messages.length - 1].id === message.id;
                           return (
                             <div key={`${message.id}-${i}`}>
                               <Response>{part.text}</Response>
-                              {message.role === "assistant" && isLast && (
-                                <Actions className="mt-2">
-                                  <Action onClick={() => regenerate()} label="Retry">
-                                    <RefreshCcwIcon className="size-4" />
+                              {!isUser && isLast && !isStreaming && (
+                                <Actions className="mt-3 -ml-1.5">
+                                  <Action
+                                    onClick={() => regenerate()}
+                                    label="Retry"
+                                    className="text-stone-500 hover:text-amber-400"
+                                  >
+                                    <RefreshCcwIcon className="size-3.5" />
                                   </Action>
                                   <Action
                                     onClick={() =>
                                       navigator.clipboard.writeText(part.text)
                                     }
                                     label="Copy"
+                                    className="text-stone-500 hover:text-amber-400"
                                   >
-                                    <CopyIcon className="size-4" />
+                                    <CopyIcon className="size-3.5" />
                                   </Action>
                                 </Actions>
                               )}
                             </div>
                           );
                         })}
-                      </MessageContent>
-
-                      {message.role === "user" && (
-                        <Avatar>
-                          <AvatarImage
-                            src={
-                              user?.image ||
-                              "https://res.cloudinary.com/sauravjha/image/upload/v1775739665/ChatGPT_Image_Apr_9_2026_06_30_49_PM_ntgpnp.png"
-                            }
-                            alt="avatar"
-                          />
-                          <AvatarFallback>CN</AvatarFallback>
-                        </Avatar>
-                      )}
+                      </div>
                     </div>
-                  </Message>
-                ))}
-                {status === "submitted" && <Loader />}
+                  );
+                })}
+                {status === "submitted" && (
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <span className="text-[10px] uppercase tracking-[0.16em] font-medium text-amber-400/80">
+                        Notionary
+                      </span>
+                      <div className="flex-1 h-px bg-stone-900/80" />
+                    </div>
+                    <div className="py-1">
+                      <Loader tone="muted" size={6} />
+                    </div>
+                  </div>
+                )}
               </ConversationContent>
               <ConversationScrollButton />
             </Conversation>
@@ -179,27 +250,42 @@ const ChatBox = ({ setOpen, contextCreated, UserMessages }: ChatBoxProps) => {
         </div>
       )}
 
-      {/* Input */}
-      <PromptInput onSubmit={handleSubmit} className="p-4 flex items-center gap-2">
-        <PromptInputTextarea
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          placeholder={
-            !contextCreated
-              ? "Upload a file to start chatting"
-              : "Start typing..."
-          }
-          disabled={!contextCreated}
-          className="px-4 text-base text-white border-none bg-neutral-800/80 focus:ring-2 focus:ring-blue-500 rounded-lg"
-        />
-        <div className="p-2">
+      {/* Composer */}
+      <div className="px-5 pb-5 pt-3 border-t border-stone-900/80 flex-shrink-0">
+        <PromptInput
+          onSubmit={handleSubmit}
+          className={cn(
+            "max-w-3xl mx-auto flex items-end gap-2 p-2 rounded-xl",
+            "bg-stone-900/60 border border-stone-800",
+            "focus-within:border-stone-700 focus-within:bg-stone-900",
+            "transition-colors"
+          )}
+        >
+          <PromptInputTextarea
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            placeholder={
+              !contextCreated
+                ? "Add a source to start chatting…"
+                : "Ask a question about your sources…"
+            }
+            disabled={!contextCreated}
+            className="flex-1 px-3 py-2 text-[15px] text-stone-100 placeholder:text-stone-500 bg-transparent border-none focus:ring-0 focus-visible:ring-0 resize-none"
+          />
           <PromptInputSubmit
-            className="bg-blue-600 hover:bg-blue-700 text-white rounded-lg shadow"
-            disabled={!input}
+            className={cn(
+              "h-9 w-9 rounded-lg shrink-0",
+              "bg-amber-400 hover:bg-amber-300 text-stone-950 disabled:bg-stone-800 disabled:text-stone-600"
+            )}
+            disabled={!input || !contextCreated}
             status={status}
           />
-        </div>
-      </PromptInput>
+        </PromptInput>
+        <p className="text-[10px] text-stone-600 text-center mt-2 max-w-3xl mx-auto">
+          Notionary can make mistakes. Verify important information against your
+          sources.
+        </p>
+      </div>
     </div>
   );
 };

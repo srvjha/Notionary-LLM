@@ -19,7 +19,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`dark bg-black ${spaceGrotesk.className}`}>
+      <body className={`dark bg-background text-foreground antialiased ${spaceGrotesk.className}`}>
         <QueryProvider>
           <Toaster />
           {children}

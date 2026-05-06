@@ -1,11 +1,12 @@
 "use client";
-import React, { useCallback, useRef, useState } from "react";
+import React, { useRef, useState } from "react";
 import {
   Upload,
   Link as LinkIcon,
   ClipboardList,
   PlusCircle,
   Youtube,
+  FileText,
 } from "lucide-react";
 import {
   Dialog,
@@ -24,8 +25,18 @@ import {
   validateUploadYoutubeURL,
 } from "@/validators/upload.validator";
 import { UploadFormData, UploadSourcesModalProps } from "@/types/upload.type";
+import { cn } from "@/lib/utils";
 
 const defaultAccept = ".pdf";
+
+type Tab = "uploadFile" | "website" | "copiedText" | "youtube";
+
+const tabs: { key: Tab; label: string; Icon: React.ComponentType<{ className?: string }> }[] = [
+  { key: "uploadFile", label: "PDF", Icon: PlusCircle },
+  { key: "website", label: "Website", Icon: LinkIcon },
+  { key: "copiedText", label: "Text", Icon: ClipboardList },
+  { key: "youtube", label: "YouTube", Icon: Youtube },
+];
 
 export default function UploadSourcesModal({
   trigger,
@@ -34,18 +45,12 @@ export default function UploadSourcesModal({
   onCopiedTextClick,
   onYoutubeClick,
   accept = defaultAccept,
-  multiple = true,
   open,
   onOpenChange,
 }: UploadSourcesModalProps) {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [isDragging, setIsDragging] = useState(false);
-  const [popUpContent, setPopUpContent] = useState({
-    uploadFile: true,
-    website: false,
-    copiedText: false,
-    youtube: false,
-  });
+  const [activeTab, setActiveTab] = useState<Tab>("uploadFile");
 
   const [websiteUrl, setWebsiteUrl] = useState("");
   const [copiedText, setCopiedText] = useState("");
@@ -55,6 +60,7 @@ export default function UploadSourcesModal({
     website: "",
     copiedText: "",
     youtube: "",
+    pdf: "",
   });
 
   const handleFiles = (fileList: FileList | null) => {
@@ -73,13 +79,9 @@ export default function UploadSourcesModal({
 
   const handleWebsiteUpload = () => {
     if (!websiteUrl) {
-      setTextError((prev) => ({
-        ...prev,
-        website: "Website URL is required.",
-      }));
+      setTextError((prev) => ({ ...prev, website: "Website URL is required." }));
       return;
     }
-    // zod validation for website
     const validation = validateUploadWebsiteURL({ url: websiteUrl });
     if (!validation.success) {
       setTextError((prev) => ({ ...prev, website: validation.error.message }));
@@ -94,13 +96,9 @@ export default function UploadSourcesModal({
 
   const handleYoutubeUpload = () => {
     if (!youtubeUrl) {
-      setTextError((prev) => ({
-        ...prev,
-        youtube: "YouTube URL is required.",
-      }));
+      setTextError((prev) => ({ ...prev, youtube: "YouTube URL is required." }));
       return;
     }
-    // zod validation for youtube
     const validation = validateUploadYoutubeURL({ url: youtubeUrl });
     if (!validation.success) {
       setTextError((prev) => ({ ...prev, youtube: validation.error.message }));
@@ -115,13 +113,9 @@ export default function UploadSourcesModal({
 
   const handleCopiedTextUpload = () => {
     if (!copiedText.trim()) {
-      setTextError((prev) => ({
-        ...prev,
-        copiedText: "Copied text is required.",
-      }));
+      setTextError((prev) => ({ ...prev, copiedText: "Copied text is required." }));
       return;
     }
-    // zod validation for copied text
     const validation = validateUploadText({ text: copiedText });
     if (!validation.success) {
       setTextError((prev) => ({
@@ -132,9 +126,7 @@ export default function UploadSourcesModal({
     }
     const formData = new FormData() as UploadFormData;
     formData.append("copiedText", copiedText);
-    if (collectionName) {
-      formData.append("collectionName", collectionName);
-    }
+    if (collectionName) formData.append("collectionName", collectionName);
     onCopiedTextClick?.(formData);
     onOpenChange?.(false);
     setTextError((prev) => ({ ...prev, copiedText: "" }));
@@ -159,179 +151,183 @@ export default function UploadSourcesModal({
     setIsDragging(false);
   };
 
-  const handleUploadClick = () =>
-    setPopUpContent({
-      uploadFile: true,
-      website: false,
-      copiedText: false,
-      youtube: false,
-    });
-  const handleWebsiteClick = () =>
-    setPopUpContent({
-      uploadFile: false,
-      website: true,
-      copiedText: false,
-      youtube: false,
-    });
-  const handleCopiedTextClick = () =>
-    setPopUpContent({
-      uploadFile: false,
-      website: false,
-      copiedText: true,
-      youtube: false,
-    });
-  const handleYoutubeTextClick = () =>
-    setPopUpContent({
-      uploadFile: false,
-      website: false,
-      copiedText: false,
-      youtube: true,
-    });
-
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogTrigger asChild>{trigger}</DialogTrigger>
-
-      <DialogContent className="sm:max-w-xl">
-        <DialogHeader>
-          <DialogTitle>Upload sources</DialogTitle>
+      <DialogContent className="sm:max-w-xl bg-stone-950 border-stone-800 p-0 overflow-hidden">
+        <DialogHeader className="px-6 pt-6 pb-2">
+          <DialogTitle className="text-stone-100 tracking-tight font-medium">
+            Add a source
+          </DialogTitle>
+          <p className="text-sm text-stone-500 mt-1">
+            Choose a source type and upload, paste, or link your content.
+          </p>
         </DialogHeader>
 
-        {/* Upload File */}
-        {popUpContent.uploadFile && (
-          <div
-            onDrop={onDrop}
-            onDragOver={onDragOver}
-            onDragLeave={onDragLeave}
-            className={[
-              "rounded-xl border-2 border-dashed p-8",
-              "bg-neutral-900/40",
-              isDragging ? "border-blue-500/70" : "border-neutral-700",
-              "transition-colors",
-            ].join(" ")}
-            role="button"
-            tabIndex={0}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" || e.key === " ") {
-                fileInputRef.current?.click();
-              }
-            }}
-          >
-            <div className="flex flex-col items-center text-center gap-2">
-              <div className="bg-blue-600/20 p-3 rounded-full">
-                <Upload className="w-6 h-6 text-blue-500" />
+        {/* Tabs */}
+        <div className="px-6 pt-3">
+          <div className="flex items-center gap-1 p-1 rounded-lg bg-stone-900/60 border border-stone-800">
+            {tabs.map(({ key, label, Icon }) => (
+              <button
+                key={key}
+                onClick={() => setActiveTab(key)}
+                className={cn(
+                  "flex-1 inline-flex items-center justify-center gap-1.5 h-8 rounded-md text-[13px] font-medium",
+                  "transition-colors cursor-pointer",
+                  activeTab === key
+                    ? "bg-stone-800 text-stone-100"
+                    : "text-stone-400 hover:text-stone-200 hover:bg-stone-800/50"
+                )}
+              >
+                <Icon className="w-3.5 h-3.5" />
+                {label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Content */}
+        <div className="px-6 py-5 min-h-[260px]">
+          {activeTab === "uploadFile" && (
+            <div className="space-y-3">
+              <div
+                onDrop={onDrop}
+                onDragOver={onDragOver}
+                onDragLeave={onDragLeave}
+                onClick={() => fileInputRef.current?.click()}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    fileInputRef.current?.click();
+                  }
+                }}
+                role="button"
+                tabIndex={0}
+                className={cn(
+                  "rounded-xl border border-dashed py-12 px-6",
+                  "flex flex-col items-center text-center gap-3",
+                  "cursor-pointer transition-colors",
+                  isDragging
+                    ? "border-amber-400 bg-amber-400/5"
+                    : "border-stone-800 hover:border-stone-700 hover:bg-stone-900/40"
+                )}
+              >
+                <div className="w-11 h-11 rounded-full bg-stone-900 border border-stone-800 flex items-center justify-center">
+                  <Upload className="w-5 h-5 text-stone-300" />
+                </div>
+                <div>
+                  <p className="text-[15px] font-medium text-stone-100">
+                    Drop a PDF here
+                  </p>
+                  <p className="text-sm text-stone-500 mt-1">
+                    or{" "}
+                    <span className="text-amber-400 underline underline-offset-2">
+                      browse files
+                    </span>
+                  </p>
+                </div>
+                <p className="text-[11px] uppercase tracking-[0.16em] text-stone-600">
+                  PDF · up to 100MB
+                </p>
+
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  className="hidden"
+                  accept={accept}
+                  onChange={(e) => handleFiles(e.target.files)}
+                />
               </div>
-              <p className="font-medium">Upload sources</p>
-              <p className="text-sm text-neutral-400">
-                Drag and drop or{" "}
-                <button
-                  type="button"
-                  className="text-blue-500 underline underline-offset-2"
-                  onClick={() => fileInputRef.current?.click()}
-                >
-                  choose file
-                </button>{" "}
-                to upload
-              </p>
-              <p className="text-xs text-neutral-500 mt-1">
-                Supported file types: PDF
-              </p>
+              {textError.pdf && (
+                <p className="text-sm text-amber-400">{textError.pdf}</p>
+              )}
             </div>
+          )}
 
-            <input
-              ref={fileInputRef}
-              type="file"
-              className="hidden"
-              accept={accept}
-              multiple={false}
-              onChange={(e) => handleFiles(e.target.files)}
-            />
-          </div>
-        )}
+          {activeTab === "website" && (
+            <div className="space-y-3">
+              <label className="block">
+                <span className="text-[11px] uppercase tracking-[0.16em] text-stone-500 font-medium">
+                  Website URL
+                </span>
+                <Input
+                  className="mt-2 h-10 bg-stone-900/60 border-stone-800 focus-visible:border-stone-600 focus-visible:ring-0 text-stone-100 placeholder:text-stone-600"
+                  placeholder="https://example.com/article"
+                  value={websiteUrl}
+                  onChange={(e) => setWebsiteUrl(e.target.value)}
+                />
+              </label>
+              {textError.website && (
+                <p className="text-sm text-amber-400">{textError.website}</p>
+              )}
+              <Button
+                onClick={handleWebsiteUpload}
+                className="w-full h-10 bg-stone-100 hover:bg-amber-300 text-stone-950 font-medium cursor-pointer"
+              >
+                Add website
+              </Button>
+            </div>
+          )}
 
-        {/* Website */}
-        {popUpContent.website && (
-          <div className="flex flex-col gap-2">
-            <Input
-              placeholder="Paste your Website URL"
-              value={websiteUrl}
-              onChange={(e) => setWebsiteUrl(e.target.value)}
-            />
-            <Button onClick={handleWebsiteUpload}>Upload</Button>
-            {textError["website"] && (
-              <p className="text-sm text-red-500">{textError["website"]}</p>
-            )}
-          </div>
-        )}
+          {activeTab === "copiedText" && (
+            <div className="space-y-3">
+              <label className="block">
+                <span className="text-[11px] uppercase tracking-[0.16em] text-stone-500 font-medium">
+                  Title
+                </span>
+                <Input
+                  className="mt-2 h-10 bg-stone-900/60 border-stone-800 focus-visible:border-stone-600 focus-visible:ring-0 text-stone-100 placeholder:text-stone-600"
+                  placeholder="A short name for this text"
+                  value={collectionName}
+                  onChange={(e) => setCollectionName(e.target.value)}
+                />
+              </label>
+              <label className="block">
+                <span className="text-[11px] uppercase tracking-[0.16em] text-stone-500 font-medium">
+                  Text
+                </span>
+                <Textarea
+                  className="mt-2 min-h-[140px] bg-stone-900/60 border-stone-800 focus-visible:border-stone-600 focus-visible:ring-0 text-stone-100 placeholder:text-stone-600"
+                  placeholder="Paste your text here…"
+                  value={copiedText}
+                  onChange={(e) => setCopiedText(e.target.value)}
+                />
+              </label>
+              {textError.copiedText && (
+                <p className="text-sm text-amber-400">{textError.copiedText}</p>
+              )}
+              <Button
+                onClick={handleCopiedTextUpload}
+                className="w-full h-10 bg-stone-100 hover:bg-amber-300 text-stone-950 font-medium cursor-pointer"
+              >
+                Add text
+              </Button>
+            </div>
+          )}
 
-        {/* Copied Text */}
-        {popUpContent.copiedText && (
-          <div className="flex flex-col gap-2">
-            <Textarea
-              placeholder="Paste your copied text"
-              value={copiedText}
-              onChange={(e) => setCopiedText(e.target.value)}
-            />
-            <Input
-              placeholder="Enter title for the collection"
-              value={collectionName}
-              onChange={(e) => setCollectionName(e.target.value)}
-              required
-            />
-            {textError["copiedText"] && (
-              <p className="text-sm text-red-500">{textError["copiedText"]}</p>
-            )}
-            <Button onClick={handleCopiedTextUpload}>Upload</Button>
-          </div>
-        )}
-
-        {/* Youtube */}
-        {popUpContent.youtube && (
-          <div className="flex flex-col gap-2">
-            <Input
-              placeholder="Paste your YouTube URL"
-              value={youtubeUrl}
-              onChange={(e) => setYoutubeUrl(e.target.value)}
-            />
-            <Button onClick={handleYoutubeUpload}>Upload</Button>
-            {textError["youtube"] && (
-              <p className="text-sm text-red-500">{textError["youtube"]}</p>
-            )}
-          </div>
-        )}
-
-        {/* Bottom buttons */}
-        <div className="grid grid-cols-2 gap-4 mt-4">
-          <button
-            onClick={handleUploadClick}
-            className="flex flex-col items-center justify-center gap-2 cursor-pointer p-4 border border-neutral-700 rounded-xl hover:bg-neutral-800/70 active:scale-[0.99] transition"
-          >
-            <PlusCircle className="w-6 h-6" />
-            <span className="text-sm">Upload File</span>
-          </button>
-          <button
-            onClick={handleWebsiteClick}
-            className="flex flex-col items-center justify-center gap-2 cursor-pointer p-4 border border-neutral-700 rounded-xl hover:bg-neutral-800/70 active:scale-[0.99] transition"
-          >
-            <LinkIcon className="w-6 h-6" />
-            <span className="text-sm">Website</span>
-          </button>
-
-          <button
-            onClick={handleCopiedTextClick}
-            className="flex flex-col items-center justify-center gap-2 cursor-pointer p-4 border border-neutral-700 rounded-xl hover:bg-neutral-800/70 active:scale-[0.99] transition"
-          >
-            <ClipboardList className="w-6 h-6" />
-            <span className="text-sm">Copied text</span>
-          </button>
-
-          <button
-            onClick={handleYoutubeTextClick}
-            className="flex flex-col items-center justify-center gap-2 cursor-pointer p-4 border border-neutral-700 rounded-xl hover:bg-neutral-800/70 active:scale-[0.99] transition"
-          >
-            <Youtube className="w-6 h-6" />
-            <span className="text-sm">YouTube Video</span>
-          </button>
+          {activeTab === "youtube" && (
+            <div className="space-y-3">
+              <label className="block">
+                <span className="text-[11px] uppercase tracking-[0.16em] text-stone-500 font-medium">
+                  YouTube URL
+                </span>
+                <Input
+                  className="mt-2 h-10 bg-stone-900/60 border-stone-800 focus-visible:border-stone-600 focus-visible:ring-0 text-stone-100 placeholder:text-stone-600"
+                  placeholder="https://youtube.com/watch?v=…"
+                  value={youtubeUrl}
+                  onChange={(e) => setYoutubeUrl(e.target.value)}
+                />
+              </label>
+              {textError.youtube && (
+                <p className="text-sm text-amber-400">{textError.youtube}</p>
+              )}
+              <Button
+                onClick={handleYoutubeUpload}
+                className="w-full h-10 bg-stone-100 hover:bg-amber-300 text-stone-950 font-medium cursor-pointer"
+              >
+                Add video
+              </Button>
+            </div>
+          )}
         </div>
       </DialogContent>
     </Dialog>

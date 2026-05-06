@@ -2,13 +2,14 @@
 import { getContextAndMessagesFromChatSessionById } from "@/modules/notebook/actions/chat";
 import ChatBox from "@/modules/notebook/components/chatBox";
 import SourceBox from "@/modules/notebook/components/sourceBox";
-import { ContextSource, Message } from "@prisma/client";
+import { ContextSource } from "@prisma/client";
 import { UIMessage } from "ai";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { ChevronLeft, Menu, PanelLeftClose, PanelLeftOpen } from "lucide-react";
+import { Menu, PanelLeftClose, PanelLeftOpen, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 export default function Page() {
   const [open, setOpen] = useState(false);
@@ -26,9 +27,7 @@ export default function Page() {
       console.log("No Data Found");
     } else {
       const { messages, contexts } = data;
-      if (messages.length > 0) {
-        setMessages(messages);
-      }
+      if (messages.length > 0) setMessages(messages);
       if (contexts.length > 0) {
         setContexts(contexts);
         setContextCreated(true);
@@ -41,29 +40,65 @@ export default function Page() {
   }, []);
 
   return (
-    <div className="flex h-screen w-full bg-black overflow-hidden relative selection:bg-blue-900 selection:text-blue-100">
-      
-      {/* Mobile Sidebar Overlay */}
+    <div className="flex h-screen w-full bg-background overflow-hidden relative">
+      {/* Mobile overlay */}
       {isSidebarOpen && (
-        <div 
-          className="lg:hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-40"
+        <div
+          className="lg:hidden fixed inset-0 bg-black/70 backdrop-blur-sm z-40"
           onClick={() => setIsSidebarOpen(false)}
         />
       )}
 
-      <div 
-        className={`${isSidebarOpen ? "translate-x-0 lg:ml-0" : "-translate-x-full lg:ml-[-320px]"} transition-all duration-300 ease-in-out fixed lg:static inset-y-0 left-0 z-50 w-[280px] lg:w-[320px] bg-[#0a0a0a] lg:bg-blue-950/5 flex flex-col flex-shrink-0 shadow-[4px_0_24px_rgba(30,58,138,0.05)] z-50`}
+      {/* Sidebar */}
+      <aside
+        className={cn(
+          "fixed lg:static inset-y-0 left-0 z-50",
+          "w-[300px] lg:w-[300px] flex-shrink-0",
+          "bg-stone-950/80 lg:bg-stone-950/40 backdrop-blur-xl",
+          "border-r border-stone-900/80",
+          "flex flex-col",
+          "transition-[transform,margin] duration-300 ease-in-out",
+          isSidebarOpen
+            ? "translate-x-0 lg:ml-0"
+            : "-translate-x-full lg:ml-[-300px]"
+        )}
       >
-        <div className="h-16 flex justify-between items-center px-4 flex-shrink-0">
-          <Link href="/" className="inline-flex items-center gap-2 group hover:opacity-80 transition-opacity">
-            <img src="/favicon.ico" alt="Logo" className="w-[32px] h-[32px] rounded-lg shadow-sm" />
+        {/* Sidebar header */}
+        <div className="h-14 flex justify-between items-center px-4 flex-shrink-0 border-b border-stone-900/80">
+          <Link
+            href="/"
+            className="inline-flex items-center gap-2.5 group hover:opacity-90 transition-opacity"
+          >
+            <div className="w-7 h-7 rounded-md bg-amber-400 flex items-center justify-center">
+              <span className="text-stone-950 text-[13px] font-bold tracking-tight">
+                N
+              </span>
+            </div>
+            <span className="text-[13px] font-medium text-stone-200 tracking-tight">
+              Notionary
+            </span>
           </Link>
-          <Button variant="ghost" size="icon" className="hidden lg:flex text-neutral-400 hover:text-white" onClick={() => setIsSidebarOpen(false)}>
-            <PanelLeftClose className="w-7 h-7" />
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-7 w-7 text-stone-500 hover:text-stone-200 hover:bg-stone-900 lg:flex hidden"
+            onClick={() => setIsSidebarOpen(false)}
+            aria-label="Collapse sidebar"
+          >
+            <PanelLeftClose className="w-4 h-4" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-7 w-7 text-stone-500 hover:text-stone-200 hover:bg-stone-900 lg:hidden flex"
+            onClick={() => setIsSidebarOpen(false)}
+            aria-label="Close sidebar"
+          >
+            <X className="w-4 h-4" />
           </Button>
         </div>
-        
-        <div className="flex-1 overflow-y-auto py-1 custom-scrollbar">
+
+        <div className="flex-1 overflow-hidden flex flex-col">
           <SourceBox
             open={open}
             setOpen={setOpen}
@@ -72,45 +107,50 @@ export default function Page() {
             setContextCreated={setContextCreated}
           />
         </div>
-      </div>
+      </aside>
 
-      {/* Main Chat Area */}
-      <div className="flex-1 flex flex-col h-full bg-black relative min-w-0">
-        
-        {/* Chat Toggle for Desktop */}
-        <div className="hidden lg:flex absolute top-0 left-0 h-16 items-center px-4 z-40">
-           {!isSidebarOpen && (
-             <Button variant="ghost" size="icon" onClick={() => setIsSidebarOpen(true)} className="text-neutral-400 hover:text-white">
-                <PanelLeftOpen className="w-5 h-5" />
-             </Button>
-           )}
-        </div>
-
-        {/* Mobile Header (Hamburger) */}
-        <div className="lg:hidden h-16 flex items-center px-4 border-b border-blue-900/20 flex-shrink-0 bg-black/80 backdrop-blur-md absolute top-0 inset-x-0 z-30">
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            className="text-blue-200 hover:text-blue-100 hover:bg-blue-900/30"
+      {/* Main */}
+      <div className="flex-1 flex flex-col h-full min-w-0 relative">
+        {/* Top bar */}
+        <div className="h-14 flex items-center px-4 border-b border-stone-900/80 flex-shrink-0 lg:bg-transparent bg-stone-950/60 backdrop-blur-md gap-3">
+          {/* Mobile hamburger */}
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8 text-stone-400 hover:text-stone-100 hover:bg-stone-900 lg:hidden"
             onClick={() => setIsSidebarOpen(true)}
+            aria-label="Open sidebar"
           >
-            <Menu className="w-5 h-5" />
+            <Menu className="w-4 h-4" />
           </Button>
-          <span className="ml-4 font-semibold text-blue-100 tracking-tight">Notionary LLM</span>
+
+          {/* Desktop expand */}
+          {!isSidebarOpen && (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 text-stone-400 hover:text-stone-100 hover:bg-stone-900 hidden lg:flex"
+              onClick={() => setIsSidebarOpen(true)}
+              aria-label="Expand sidebar"
+            >
+              <PanelLeftOpen className="w-4 h-4" />
+            </Button>
+          )}
+
+          <span className="text-sm font-medium text-stone-200 tracking-tight lg:hidden">
+            Notionary
+          </span>
         </div>
 
-        {/* Chat Box Container */}
-        <div className="flex-1 overflow-hidden lg:pt-0 pt-16 relative p-2 lg:p-4">
-          <div className="h-full w-full max-w-5xl mx-auto bg-neutral-900/40 rounded-xl border border-neutral-800 flex flex-col overflow-hidden shadow-lg">
-            <ChatBox
-              setOpen={setOpen}
-              UserMessages={messages}
-              setContextCreated={setContextCreated}
-              contextCreated={contextCreated}
-            />
-          </div>
+        {/* Chat area */}
+        <div className="flex-1 overflow-hidden">
+          <ChatBox
+            setOpen={setOpen}
+            UserMessages={messages}
+            setContextCreated={setContextCreated}
+            contextCreated={contextCreated}
+          />
         </div>
-
       </div>
     </div>
   );

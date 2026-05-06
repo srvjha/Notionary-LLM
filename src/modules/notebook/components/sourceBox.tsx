@@ -1,20 +1,26 @@
 "use client";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import UploadSourcesModal from "./uploadSourceModal";
 import {
-  DockIcon,
-  FileCheck,
+  FileText,
   Globe,
   Plus,
   PlusCircle,
-  SquarePen,
-  Trash,
+  Trash2,
   Youtube,
+  ClipboardList,
+  Inbox,
+  Check,
 } from "lucide-react";
 import { UploadFormData } from "@/types/upload.type";
 import toast from "react-hot-toast";
-import { ClipLoader } from "react-spinners";
+import { Loader } from "@/components/ai-elements/loader";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 import {
   AlertDialog,
@@ -35,6 +41,7 @@ import {
   useYoutubeIndexing,
 } from "../hooks/notebook";
 import { ContextSource, SourceType } from "@prisma/client";
+import { cn } from "@/lib/utils";
 
 interface SourceBoxProps {
   open: boolean;
@@ -43,11 +50,23 @@ interface SourceBoxProps {
   contexts: ContextSource[];
   setContextCreated: (created: boolean) => void;
 }
+
 export interface Source {
   title: string;
   type: "pdf" | "website" | "text" | "youtube";
   fileID?: string;
 }
+
+const typeMeta: Record<
+  SourceType,
+  { label: string; Icon: React.ComponentType<{ className?: string }> }
+> = {
+  [SourceType.PDF]: { label: "PDF", Icon: FileText },
+  [SourceType.WEBSITE]: { label: "Web", Icon: Globe },
+  [SourceType.TEXT]: { label: "Text", Icon: ClipboardList },
+  [SourceType.YOUTUBE]: { label: "YouTube", Icon: Youtube },
+};
+
 const SourceBox = ({
   open,
   setOpen,
@@ -65,12 +84,11 @@ const SourceBox = ({
   const { mutateAsync: uploadPdf, isPending: isUploadingPdf } =
     usePdfIndexing();
 
- useEffect(() => {
-  if (UserContexts.length > 0) {
-    setSources(UserContexts);
-  }
-}, [UserContexts.length]);
-
+  useEffect(() => {
+    if (UserContexts.length > 0) {
+      setSources(UserContexts);
+    }
+  }, [UserContexts.length]);
 
   const handleFilesSelected = async (formData: UploadFormData) => {
     const pdfFileName = formData.get("pdf")?.name;
@@ -98,7 +116,7 @@ const SourceBox = ({
             prev.map((source) =>
               source.title === pdfFileName &&
               source.sourceType === SourceType.PDF
-                ? { ...source, fileID: fileId }
+                ? { ...source, id: fileId }
                 : source
             )
           );
@@ -127,7 +145,10 @@ const SourceBox = ({
     }
 
     if (websiteUrl) {
-      setSources((prev) => [...prev, { title: websiteUrl, type: "website" }]);
+      setSources((prev) => [
+        ...prev,
+        { title: websiteUrl as string, sourceType: SourceType.WEBSITE },
+      ]);
     }
     try {
       const response = await uploadWebsite(formData);
@@ -138,7 +159,7 @@ const SourceBox = ({
             prev.map((source) =>
               source.title === websiteUrl &&
               source.sourceType === SourceType.WEBSITE
-                ? { ...source, fileID: fileId }
+                ? { ...source, id: fileId }
                 : source
             )
           );
@@ -165,7 +186,10 @@ const SourceBox = ({
       return;
     }
     if (copiedText) {
-      setSources((prev) => [...prev, { title: copiedText, type: "text" }]);
+      setSources((prev) => [
+        ...prev,
+        { title: copiedText as string, sourceType: SourceType.TEXT },
+      ]);
     }
     try {
       const response = await uploadText(formData);
@@ -177,7 +201,7 @@ const SourceBox = ({
             prev.map((source) =>
               source.title === copiedText &&
               source.sourceType === SourceType.TEXT
-                ? { ...source, fileID: fileId }
+                ? { ...source, id: fileId }
                 : source
             )
           );
@@ -204,7 +228,10 @@ const SourceBox = ({
       return;
     }
     if (youtubeUrl) {
-      setSources((prev) => [...prev, { title: youtubeUrl, type: "youtube" }]);
+      setSources((prev) => [
+        ...prev,
+        { title: youtubeUrl as string, sourceType: SourceType.YOUTUBE },
+      ]);
     }
     try {
       const response = await uploadYoutube(formData);
@@ -215,7 +242,7 @@ const SourceBox = ({
             prev.map((source) =>
               source.title === youtubeUrl &&
               source.sourceType === SourceType.YOUTUBE
-                ? { ...source, fileID: fileId }
+                ? { ...source, id: fileId }
                 : source
             )
           );
@@ -238,29 +265,74 @@ const SourceBox = ({
 
   const handleDeleteSource = async (fileId?: string) => {
     setSources((prev) => prev.filter((source) => source.id !== fileId));
-    toast.success("Source deleted successfully");
+    toast.success("Source removed");
   };
+
+  const isUploadingFor = (type?: SourceType) => {
+    switch (type) {
+      case SourceType.PDF:
+        return isUploadingPdf;
+      case SourceType.WEBSITE:
+        return isUploadingWebsite;
+      case SourceType.TEXT:
+        return isUploadingText;
+      case SourceType.YOUTUBE:
+        return isUploadingYoutube;
+      default:
+        return false;
+    }
+  };
+
+  const grouped = useMemo(() => {
+    const order: SourceType[] = [
+      SourceType.PDF,
+      SourceType.WEBSITE,
+      SourceType.YOUTUBE,
+      SourceType.TEXT,
+    ];
+    const map = new Map<SourceType, Partial<ContextSource>[]>();
+    for (const t of order) map.set(t, []);
+    for (const s of sources) {
+      if (!s.sourceType) continue;
+      map.get(s.sourceType)!.push(s);
+    }
+    return order
+      .map((t) => ({ type: t, items: map.get(t)! }))
+      .filter((g) => g.items.length > 0);
+  }, [sources]);
 
   return (
     <div className="h-full flex flex-col">
-      {/* Sources Header  */}
-      <div className="p-4 flex justify-between items-center">
+      {/* Header — Sources label + New Chat */}
+      <div className="px-4 pt-1 pb-3 flex justify-between items-center">
+        <div className="flex items-baseline gap-2">
+          <span className="text-[11px] uppercase tracking-[0.18em] text-stone-500 font-medium">
+            Sources
+          </span>
+          {sources.length > 0 && (
+            <span className="text-[11px] text-stone-600 tabular-nums">
+              {sources.length}
+            </span>
+          )}
+        </div>
         <AlertDialog>
           <AlertDialogTrigger asChild>
             <Button
-              variant="outline"
-              className="cursor-pointer"
+              variant="ghost"
+              size="sm"
+              className="h-7 px-2 text-xs text-stone-400 hover:text-stone-100 hover:bg-stone-800/60 cursor-pointer"
               disabled={sources.length === 0}
             >
-              New Chat <Plus />
+              <Plus className="w-3.5 h-3.5 mr-1" />
+              New
             </Button>
           </AlertDialogTrigger>
           <AlertDialogContent>
             <AlertDialogHeader>
-              <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+              <AlertDialogTitle>Start a new notebook?</AlertDialogTitle>
               <AlertDialogDescription>
-                This action cannot be undone. This will permanently delete your
-                chat and remove your sources.
+                This will clear your current chat and remove all attached
+                sources. You can&apos;t undo this.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
@@ -273,74 +345,122 @@ const SourceBox = ({
         </AlertDialog>
       </div>
 
-      <div className="p-1.5">
-        {false ? (
-          <div className="flex justify-center items-center px-4 py-6">
-            <ClipLoader size={28} color="white" />
+      {/* Source list */}
+      <div className="flex-1 overflow-y-auto custom-scrollbar px-2">
+        {sources.length === 0 ? (
+          <div className="flex-1 flex flex-col items-center justify-center text-center gap-3 px-4 py-12">
+            <div className="w-11 h-11 rounded-full bg-stone-900 border border-stone-800 flex items-center justify-center">
+              <Inbox className="w-5 h-5 text-stone-500" />
+            </div>
+            <p className="text-sm text-stone-400 leading-relaxed max-w-[200px]">
+              No sources yet. Add a PDF, website, video, or pasted text to get
+              started.
+            </p>
           </div>
         ) : (
-          sources.map((source, index) => (
-            <div
-              key={index}
-              className="flex items-center gap-2 border rounded-lg p-3 mb-3 mt-1 cursor-pointer transition bg-neutral-900 text-neutral-100"
-            >
-              <div className="flex gap-2 w-full text-neutral-50 ">
-                {source.sourceType === SourceType.PDF &&
-                  (isUploadingPdf ? (
-                    <ClipLoader size={24} color="white" />
-                  ) : (
-                    <SquarePen className="w-5 h-5 mt-0.5 text-white" />
-                  ))}
+          <div className="space-y-5 pb-4">
+            {grouped.map((group) => {
+              const meta = typeMeta[group.type];
+              return (
+                <div key={group.type}>
+                  <div className="flex items-center gap-2 px-2 mb-1.5">
+                    <meta.Icon className="w-3 h-3 text-stone-500" />
+                    <span className="text-[10px] uppercase tracking-[0.16em] text-stone-500 font-medium">
+                      {meta.label}
+                    </span>
+                    <div className="flex-1 h-px bg-stone-800/60" />
+                    <span className="text-[10px] text-stone-600 tabular-nums">
+                      {group.items.length}
+                    </span>
+                  </div>
+                  <ul className="space-y-0.5">
+                    {group.items.map((source, idx) => {
+                      const indexed = !!source.id;
+                      const uploading =
+                        !indexed && isUploadingFor(source.sourceType);
+                      const Icon = meta.Icon;
+                      const title = (source.title as string) || "Untitled";
+                      return (
+                        <li
+                          key={`${source.id ?? "tmp"}-${idx}`}
+                          className={cn(
+                            "group/source relative flex items-center gap-2.5 rounded-md px-2 py-2",
+                            "hover:bg-stone-900/70 transition-colors"
+                          )}
+                        >
+                          <div className="relative flex-shrink-0 w-7 h-7 rounded-md bg-stone-900 border border-stone-800 flex items-center justify-center">
+                            {uploading ? (
+                              <Loader size={4} tone="accent" />
+                            ) : (
+                              <Icon className="w-3.5 h-3.5 text-stone-300" />
+                            )}
+                            {indexed && !uploading && (
+                              <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-stone-950 border border-stone-800 flex items-center justify-center">
+                                <Check className="w-2 h-2 text-amber-400" />
+                              </span>
+                            )}
+                          </div>
 
-                {source.sourceType === SourceType.WEBSITE &&
-                  (isUploadingWebsite ? (
-                    <ClipLoader size={24} color="white" />
-                  ) : (
-                    <Globe className="w-5 h-5 mt-0.5 text-white" />
-                  ))}
+                          <Tooltip delayDuration={400}>
+                            <TooltipTrigger asChild>
+                              <div className="min-w-0 flex-1">
+                                <p className="text-[13px] text-stone-200 truncate leading-tight">
+                                  {title}
+                                </p>
+                                <p className="text-[10px] text-stone-500 mt-0.5">
+                                  {uploading
+                                    ? "Indexing…"
+                                    : indexed
+                                    ? "Indexed"
+                                    : "Pending"}
+                                </p>
+                              </div>
+                            </TooltipTrigger>
+                            <TooltipContent
+                              side="right"
+                              className="max-w-xs break-words"
+                            >
+                              {title}
+                            </TooltipContent>
+                          </Tooltip>
 
-                {source.sourceType === SourceType.TEXT &&
-                  (isUploadingText ? (
-                    <ClipLoader size={24} color="white" />
-                  ) : (
-                    <DockIcon className="w-5 h-5 mt-0.5 text-white" />
-                  ))}
-
-                {source.sourceType === SourceType.YOUTUBE &&
-                  (isUploadingYoutube ? (
-                    <ClipLoader size={24} color="white" />
-                  ) : (
-                    <Youtube className="w-5 h-5 mt-0.5 text-white" />
-                  ))}
-
-                <div className="flex justify-between items-center w-full">
-                  <span className="truncate flex">{source.title}</span>
-                  <Trash
-                    className="w-5 h-5 mt-0.5 text-red-500"
-                    onClick={() => handleDeleteSource(source.id)}
-                  />
+                          <button
+                            onClick={() => handleDeleteSource(source.id)}
+                            disabled={uploading}
+                            aria-label="Remove source"
+                            className={cn(
+                              "flex-shrink-0 w-6 h-6 rounded-md flex items-center justify-center",
+                              "text-stone-500 hover:text-amber-400 hover:bg-stone-800",
+                              "opacity-0 group-hover/source:opacity-100 transition-opacity",
+                              "disabled:opacity-0 cursor-pointer"
+                            )}
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </li>
+                      );
+                    })}
+                  </ul>
                 </div>
-              </div>
-            </div>
-          ))
+              );
+            })}
+          </div>
         )}
       </div>
 
-      {sources.length === 0 ? (
-        <div className="flex-1 flex flex-col items-center justify-center text-center gap-4">
-          <FileCheck size={50} />
-          <p className="text-sm text-neutral-400 w-full px-4">
-            Click below to add PDFs, websites or directly import a file.
-          </p>
-        </div>
-      ) : null}
-
-      <div className="p-4 mt-auto">
+      {/* Footer — add sources */}
+      <div className="p-3 border-t border-stone-900/80">
         <UploadSourcesModal
           trigger={
-            <Button className="w-full text-base cursor-pointer flex items-center gap-2">
-              Add Sources
-              <PlusCircle className="size-[20px]" />
+            <Button
+              className={cn(
+                "w-full h-10 text-sm font-medium cursor-pointer",
+                "bg-stone-100 text-stone-950 hover:bg-amber-300 hover:text-stone-950",
+                "transition-colors flex items-center justify-center gap-2 rounded-md"
+              )}
+            >
+              <PlusCircle className="w-4 h-4" />
+              Add source
             </Button>
           }
           onFilesSelected={handleFilesSelected}

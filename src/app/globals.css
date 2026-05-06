@@ -44,7 +44,7 @@
 }
 
 :root {
-  --radius: 0.625rem;
+  --radius: 0.5rem;
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);
   --card: oklch(1 0 0);
@@ -79,37 +79,38 @@
 }
 
 .dark {
-   --background: #03000a;
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.488 0.243 264.376);
-  --chart-2: oklch(0.696 0.17 162.48);
-  --chart-3: oklch(0.769 0.188 70.08);
-  --chart-4: oklch(0.627 0.265 303.9);
-  --chart-5: oklch(0.645 0.246 16.439);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+  /* warm dark — stone neutrals + amber accent */
+  --background: #0c0a09;            /* stone-950 */
+  --foreground: #fafaf9;            /* stone-50 */
+  --card: #14110f;
+  --card-foreground: #fafaf9;
+  --popover: #1c1917;               /* stone-900 */
+  --popover-foreground: #fafaf9;
+  --primary: #fafaf9;
+  --primary-foreground: #0c0a09;
+  --secondary: #1c1917;
+  --secondary-foreground: #fafaf9;
+  --muted: #1c1917;
+  --muted-foreground: #a8a29e;      /* stone-400 */
+  --accent: #292524;                /* stone-800 */
+  --accent-foreground: #fafaf9;
+  --destructive: #f97316;           /* warm orange instead of red */
+  --border: rgba(250, 250, 249, 0.08);
+  --input: rgba(250, 250, 249, 0.08);
+  --ring: #fbbf24;                  /* amber-400 */
+  --chart-1: #fbbf24;
+  --chart-2: #f59e0b;
+  --chart-3: #d97706;
+  --chart-4: #92400e;
+  --chart-5: #78350f;
+  --sidebar: #0c0a09;
+  --sidebar-foreground: #fafaf9;
+  --sidebar-primary: #fbbf24;
+  --sidebar-primary-foreground: #0c0a09;
+  --sidebar-accent: #1c1917;
+  --sidebar-accent-foreground: #fafaf9;
+  --sidebar-border: rgba(250, 250, 249, 0.06);
+  --sidebar-ring: #fbbf24;
 }
 
 @layer base {
@@ -118,20 +119,89 @@
   }
   body {
     @apply bg-background text-foreground;
+    font-feature-settings: "ss01", "cv11";
+  }
+  ::selection {
+    background: rgba(251, 191, 36, 0.25);
+    color: #fef3c7;
+  }
+  html {
+    scroll-behavior: smooth;
   }
 }
 
+/* Custom scrollbar — thin, warm */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(250, 250, 249, 0.08);
+  border-radius: 3px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(250, 250, 249, 0.16);
+}
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(250, 250, 249, 0.08) transparent;
+}
 
-/* Hide scrollbar for Webkit browsers */
+/* Hide scrollbar (used in some places) */
 .scroll-hidden::-webkit-scrollbar {
   display: none;
 }
-
-/* Hide scrollbar for Firefox */
 .scroll-hidden {
-  scrollbar-width: none; /* Firefox */
-  -ms-overflow-style: none; /* IE 10+ */
-  
-  /* Smooth scrolling */
-  scroll-behavior: smooth;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+/* Dot-trio loader animation */
+@keyframes dot-bounce {
+  0%, 80%, 100% {
+    transform: translateY(0);
+    opacity: 0.4;
+  }
+  40% {
+    transform: translateY(-4px);
+    opacity: 1;
+  }
+}
+.dot-trio-dot {
+  animation: dot-bounce 1.2s ease-in-out infinite;
+}
+
+/* Subtle grain texture for warm-dark surfaces */
+.warm-grain {
+  position: relative;
+}
+.warm-grain::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: radial-gradient(
+    rgba(255, 255, 255, 0.015) 1px,
+    transparent 1px
+  );
+  background-size: 3px 3px;
+  opacity: 0.5;
+}
+
+/* Gentle fade-in for landing sections */
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.fade-up {
+  animation: fade-up 0.6s ease-out both;
 }

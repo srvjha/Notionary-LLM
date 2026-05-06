@@ -1,8 +1,7 @@
 "use client";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Brain, ArrowRight, Play, Loader2 } from "lucide-react";
+import { ArrowRight, Play } from "lucide-react";
 import Link from "next/link";
 import SupportedInputs from "@/modules/notebook/components/supportedInput";
 import { features, inputTypes } from "./helper";
@@ -11,6 +10,7 @@ import {
   getLastActiveChatSession,
 } from "@/modules/notebook/actions/chat";
 import { redirect } from "next/navigation";
+import { Loader } from "@/components/ai-elements/loader";
 
 const Page = () => {
   const [loading, setLoading] = useState(false);
@@ -37,90 +37,197 @@ const Page = () => {
   };
 
   return (
-    <div className="min-h-screen bg-black text-slate-300 selection:bg-blue-900 selection:text-blue-100">
-      <div className="relative overflow-hidden">
-        <div className="relative px-6 pt-24 pb-16 md:pt-16 md:pb-24 flex flex-col items-center justify-center min-h-[70vh]">
-          <div className="max-w-4xl mx-auto text-center space-y-8 relative z-10">
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-950/30">
-              <Brain className="w-4 h-4 text-blue-400" />
-              <span className="text-sm font-medium text-blue-200 tracking-wide uppercase">
-                AI-Powered Intelligence
+    <div className="min-h-screen bg-stone-950 text-stone-100">
+      {/* Hero */}
+      <section className="relative px-6 pt-24 pb-32 md:pt-32 md:pb-40 overflow-hidden">
+        {/* Soft gradient backdrop */}
+        <div className="absolute inset-x-0 top-0 h-[600px] bg-[radial-gradient(ellipse_60%_50%_at_50%_0%,rgba(251,191,36,0.08),transparent_70%)] pointer-events-none" />
+
+        <div className="max-w-4xl mx-auto relative z-10">
+          <div className="fade-up">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-stone-900 border border-stone-800 mb-8">
+              <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
+              <span className="text-[11px] uppercase tracking-[0.18em] text-stone-300 font-medium">
+                Now in beta
               </span>
             </div>
-            
-            <h1 className="text-5xl sm:text-6xl md:text-7xl font-extrabold tracking-tight text-transparent bg-clip-text bg-gradient-to-br from-blue-50 via-blue-300 to-blue-800 pb-2">
-              Knowledge Companion
+
+            <h1 className="text-5xl sm:text-6xl md:text-7xl font-medium tracking-[-0.03em] leading-[1.02] text-stone-100">
+              Your sources.
+              <br />
+              <span className="text-stone-500">Your second brain.</span>
             </h1>
 
-            <p className="text-lg md:text-xl text-blue-100/60 max-w-2xl mx-auto leading-relaxed">
-              Create your own personalized notebook by adding context through
-              sources, and chat with them naturally with a personalized touch
-              powered by Notionary LLM.
+            <p className="mt-7 text-lg md:text-xl text-stone-400 max-w-2xl leading-relaxed">
+              Notionary turns your PDFs, articles, videos, and notes into a
+              conversational research companion. Ask anything — get answers
+              grounded in what you actually have.
             </p>
-            
-            <div className="flex flex-col sm:flex-row justify-center items-center gap-4 pt-10">
+
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 mt-10">
               <Button
-                className="w-full sm:w-auto px-8 py-6 text-lg font-medium bg-blue-600 hover:bg-blue-700 text-white hover:cursor-pointer  hover:shadow-[0_0_35px_rgba(37,99,235,0.6)] transition-all flex items-center justify-center gap-2 disabled:opacity-80 disabled:cursor-not-allowed group rounded-none border-none"
                 onClick={handleNoteBook}
                 disabled={loading}
+                className="h-12 px-6 text-[15px] font-medium bg-stone-100 text-stone-950 hover:bg-amber-300 transition-colors cursor-pointer rounded-md group disabled:opacity-70"
               >
                 {loading ? (
                   <>
-                    <Loader2 className="animate-spin w-5 h-5 mr-2" />
-                    Creating Notebook...
+                    <Loader tone="default" size={5} className="mr-2.5" />
+                    Opening notebook…
                   </>
                 ) : (
                   <>
-                    Get Started
+                    Open your notebook
+                    <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-0.5 transition-transform" />
                   </>
                 )}
               </Button>
 
-              <Link href="https://youtu.be/3QpY7EyjPXw" target="__blank" className="w-full sm:w-auto">
-                <Button className="w-full sm:w-auto px-8 py-6 text-lg bg-black/40 backdrop-blur-sm text-blue-300 hover:bg-blue-900/20 hover:text-blue-100 shadow-[0_0_20px_rgba(37,99,235,0.1)] hover:shadow-[0_0_30px_rgba(37,99,235,0.2)] border-none cursor-pointer transition-all rounded-none group">
-                  <Play className="w-4 h-4 mr-2 text-blue-400 group-hover:text-blue-300" />
-                  Watch Demo
+              <Link
+                href="https://youtu.be/3QpY7EyjPXw"
+                target="_blank"
+                rel="noreferrer"
+              >
+                <Button
+                  variant="ghost"
+                  className="h-12 px-5 text-[15px] text-stone-300 hover:text-stone-100 hover:bg-stone-900 cursor-pointer rounded-md"
+                >
+                  <Play className="w-4 h-4 mr-2 text-amber-400" />
+                  Watch demo
                 </Button>
               </Link>
             </div>
           </div>
-        </div>
-      </div>
 
-      <div className="px-6 py-24 relative bg-black shadow-[0_-15px_40px_rgba(30,58,138,0.08)]">
-        <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-blue-800/50 to-transparent"></div>
-        <div className="max-w-6xl mx-auto relative z-10">
-          <h2 className="text-3xl md:text-4xl font-bold text-center mb-16 text-transparent bg-clip-text bg-gradient-to-r from-blue-100 to-blue-400">
-            Why Choose Notionary LLM?
-          </h2>
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
-            {features.map((feature, index) => (
-              <Card
-                key={index}
-                className="bg-blue-950/20 border-none transition-all duration-300 shadow-[0_4px_30px_rgba(30,58,138,0.08)] hover:shadow-[0_4px_40px_rgba(30,58,138,0.2)] group backdrop-blur-sm overflow-hidden relative rounded-2xl"
-              >
-                <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-blue-500/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                <CardContent className="p-8 flex flex-col items-center text-center space-y-5">
-                  <div className="p-4 rounded-xl bg-blue-900/20 shadow-[0_0_15px_rgba(37,99,235,0.1)] group-hover:scale-110 group-hover:bg-blue-800/30 group-hover:shadow-[0_0_25px_rgba(37,99,235,0.3)] transition-all duration-300">
-                    {feature.icon}
+          {/* Visual */}
+          <div className="mt-20 relative fade-up" style={{ animationDelay: "120ms" }}>
+            <div className="rounded-xl border border-stone-800 bg-stone-900/40 p-1 shadow-[0_24px_60px_-12px_rgba(0,0,0,0.6)] overflow-hidden">
+              <div className="rounded-lg bg-stone-950 border border-stone-900 overflow-hidden">
+                <div className="flex items-center gap-2 px-4 py-3 border-b border-stone-900">
+                  <div className="flex gap-1.5">
+                    <span className="w-2.5 h-2.5 rounded-full bg-stone-800" />
+                    <span className="w-2.5 h-2.5 rounded-full bg-stone-800" />
+                    <span className="w-2.5 h-2.5 rounded-full bg-stone-800" />
                   </div>
-                  <h3 className="font-semibold text-xl text-blue-100 tracking-wide">
-                    {feature.title}
-                  </h3>
-                  <p className="text-blue-200/50 text-sm leading-relaxed">
-                    {feature.description}
-                  </p>
-                </CardContent>
-              </Card>
+                  <div className="flex-1 text-center text-[11px] text-stone-600 tracking-wider">
+                    notionary.app/notebook
+                  </div>
+                </div>
+                <div className="grid grid-cols-12 min-h-[280px]">
+                  <div className="col-span-4 border-r border-stone-900 p-4 space-y-2">
+                    <div className="text-[10px] uppercase tracking-[0.18em] text-stone-600 font-medium mb-2">
+                      Sources · 3
+                    </div>
+                    {[
+                      { t: "research-paper.pdf", indexed: true },
+                      { t: "vercel.com/blog/ai-sdk", indexed: true },
+                      { t: "Lecture 04 — Transformers", indexed: false },
+                    ].map((s, i) => (
+                      <div
+                        key={i}
+                        className="flex items-center gap-2 px-2 py-1.5 rounded text-[12px] text-stone-300"
+                      >
+                        <div className="w-5 h-5 rounded bg-stone-900 border border-stone-800 flex-shrink-0" />
+                        <span className="truncate">{s.t}</span>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="col-span-8 p-5 space-y-4">
+                    <div>
+                      <div className="text-[10px] uppercase tracking-[0.18em] text-stone-600 font-medium mb-1.5">
+                        You
+                      </div>
+                      <p className="text-[13px] text-stone-200">
+                        What are the three core ideas across these sources?
+                      </p>
+                    </div>
+                    <div>
+                      <div className="text-[10px] uppercase tracking-[0.18em] text-amber-400/70 font-medium mb-1.5">
+                        Notionary
+                      </div>
+                      <p className="text-[13px] text-stone-300 leading-relaxed">
+                        All three converge on attention as a routing primitive,
+                        but differ on…
+                      </p>
+                      <div className="mt-3">
+                        <Loader tone="muted" size={5} />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Features */}
+      <section className="px-6 py-24 bg-stone-950">
+        <div className="max-w-5xl mx-auto">
+          <div className="mb-16 max-w-2xl">
+            <p className="text-[11px] uppercase tracking-[0.2em] text-amber-400/80 font-medium mb-3">
+              Why it works
+            </p>
+            <h2 className="text-3xl md:text-4xl font-medium text-stone-100 tracking-tight leading-tight">
+              Built for research, not chitchat.
+            </h2>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-px bg-stone-900/60 rounded-xl overflow-hidden border border-stone-900">
+            {features.map((feature, i) => (
+              <div
+                key={i}
+                className="bg-stone-950 p-8 hover:bg-stone-900/40 transition-colors group"
+              >
+                <div className="w-10 h-10 rounded-lg bg-stone-900 border border-stone-800 flex items-center justify-center text-stone-300 group-hover:text-amber-400 group-hover:border-amber-400/30 transition-colors mb-5">
+                  {feature.icon}
+                </div>
+                <h3 className="text-[17px] font-medium text-stone-100 tracking-tight mb-2">
+                  {feature.title}
+                </h3>
+                <p className="text-stone-400 text-[14px] leading-relaxed">
+                  {feature.description}
+                </p>
+              </div>
             ))}
           </div>
         </div>
-      </div>
+      </section>
 
-      <div className="bg-black relative shadow-[0_-15px_40px_rgba(30,58,138,0.08)] pb-24">
-         <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-blue-800/30 to-transparent"></div>
-        <SupportedInputs inputTypes={inputTypes} />
-      </div>
+      {/* Supported inputs */}
+      <SupportedInputs inputTypes={inputTypes} />
+
+      {/* CTA */}
+      <section className="px-6 py-24 bg-stone-950">
+        <div className="max-w-3xl mx-auto text-center">
+          <h2 className="text-3xl md:text-5xl font-medium text-stone-100 tracking-[-0.02em] leading-tight">
+            Stop searching.
+            <br />
+            <span className="text-stone-500">Start asking.</span>
+          </h2>
+          <p className="mt-5 text-stone-400 max-w-xl mx-auto">
+            Open a notebook. Drop in your sources. Ask better questions of the
+            things you already have.
+          </p>
+          <Button
+            onClick={handleNoteBook}
+            disabled={loading}
+            className="mt-10 h-12 px-6 text-[15px] font-medium bg-amber-400 hover:bg-amber-300 text-stone-950 transition-colors cursor-pointer rounded-md group"
+          >
+            {loading ? (
+              <>
+                <Loader tone="default" size={5} className="mr-2.5" />
+                Opening…
+              </>
+            ) : (
+              <>
+                Get started — it&apos;s free
+                <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-0.5 transition-transform" />
+              </>
+            )}
+          </Button>
+        </div>
+      </section>
     </div>
   );
 };

@@ -11,8 +11,8 @@ import {
 
 export const inputTypes = [
   {
-    icon: <FileText className="w-10 h-10 text-blue-400" />,
-    title: "PDF Documents",
+    icon: <FileText className="w-10 h-10" />,
+    title: "PDF documents",
     description: "Research papers, reports, manuals, books",
     details: [
       "Supports multi-page PDFs up to 100MB",
@@ -33,7 +33,7 @@ export const inputTypes = [
     ],
   },
   {
-    icon: <Globe className="w-10 h-10 text-blue-500" />,
+    icon: <Globe className="w-10 h-10" />,
     title: "Website URLs",
     description: "Articles, blogs, documentation, web pages",
     details: [
@@ -55,8 +55,8 @@ export const inputTypes = [
     ],
   },
   {
-    icon: <Copy className="w-10 h-10 text-blue-300" />,
-    title: "Copied Text",
+    icon: <Copy className="w-10 h-10" />,
+    title: "Pasted text",
     description: "Emails, notes, articles, any text content",
     details: [
       "Paste any text content directly",
@@ -77,8 +77,8 @@ export const inputTypes = [
     ],
   },
   {
-    icon: <Video className="w-10 h-10 text-blue-600" />,
-    title: "YouTube Videos",
+    icon: <Video className="w-10 h-10" />,
+    title: "YouTube videos",
     description: "Educational content, tutorials, lectures",
     details: [
       "Extracts transcripts from YouTube videos",
@@ -102,27 +102,27 @@ export const inputTypes = [
 
 export const features = [
   {
-    icon: <Brain className="w-10 h-10 text-blue-400" />,
-    title: "RAG Technology",
+    icon: <Brain className="w-5 h-5" />,
+    title: "Grounded answers",
     description:
-      "Retrieval-Augmented Generation ensures accurate, source-backed answers",
+      "Every response is anchored in your sources via retrieval-augmented generation. No hallucinated facts.",
   },
   {
-    icon: <Search className="w-10 h-10 text-blue-500" />,
-    title: "Smart Search",
+    icon: <Search className="w-5 h-5" />,
+    title: "Semantic search",
     description:
-      "AI understands context and finds relevant information across all your documents",
+      "Ask in plain English. Notionary finds the right passages across all your documents — even if your wording doesn't match.",
   },
   {
-    icon: <HelpCircle className="w-10 h-10 text-blue-300" />,
-    title: "Source Attribution",
-    description: "Every answer shows exactly where the information came from",
+    icon: <HelpCircle className="w-5 h-5" />,
+    title: "Source attribution",
+    description:
+      "See exactly which document and section every answer came from. Verify, don't trust.",
   },
   {
-    icon: <Zap className="w-10 h-10 text-blue-600" />,
-    title: "Instant Responses",
-    description: "Get answers in seconds, not minutes of manual searching",
+    icon: <Zap className="w-5 h-5" />,
+    title: "Instant context",
+    description:
+      "Drop in a PDF, paste a URL, link a video. Indexed in seconds — start asking immediately.",
   },
 ];
-
-
