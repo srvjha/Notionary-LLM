@@ -1,241 +1,92 @@
-# 🎯 Notecast - RAG-Powered Knowledge Assistant
+# Notionary
 
-A sophisticated **Retrieval Augmented Generation (RAG)** web application that transforms your documents, websites, and text into an intelligent, queryable knowledge base. Upload your content and chat with your data using advanced AI-powered responses with full context awareness.
+A retrieval-augmented research notebook. Drop in your PDFs, web articles,
+YouTube videos, or pasted text — Notionary indexes them and lets you ask
+questions grounded in what you actually have, with source attribution on
+every answer.
 
-[![Demo](https://img.shields.io/badge/🌐_Live_Demo-notecast.srvjha.in-blue)](https://notecast.srvjha.in/)
-[![Video Demo](https://img.shields.io/badge/📺_YouTube-Demo_Video-red)](https://youtu.be/ctOAPrMxJY0)
-[![GitHub](https://img.shields.io/badge/📁_Source-GitHub_Repo-black)](https://github.com/srvjha/notecast)
+[Live demo](https://notecast.srvjha.in/) · [Video walkthrough](https://youtu.be/3QpY7EyjPXw) · [Repo](https://github.com/srvjha/notecast)
 
----
+## What it does
 
-## ✨ Key Features
+- **Multi-source ingestion** — PDFs (with OCR fallback), website URLs,
+  YouTube transcripts, and pasted text.
+- **RAG pipeline** — content is chunked, embedded, and stored in Qdrant.
+  Queries retrieve relevant passages before the model generates a response.
+- **Persistent notebooks** — chat sessions, sources, and message history
+  are saved per user via Postgres + Prisma. Resume anywhere.
+- **Source attribution** — every answer is anchored to the chunk it came
+  from, so you can verify rather than trust.
 
-### 📚 **Multi-Source Data Ingestion**
-- **📄 PDF Upload**: Extract and index content from PDF documents
-- **🌐 Website Scraping**: Input any website URL to scrape and index web content  
-- **📝 Direct Text Input**: Paste text content directly for immediate indexing
-- **💾 Local Storage Persistence**: All your data sources are saved locally for instant access
+## Stack
 
-### 🤖 **Intelligent Chat Interface** 
-- **Context-Aware Responses**: Get accurate answers based on your uploaded content
-- **RAG-Powered**: Advanced retrieval system ensures responses are grounded in your data
-- **Chat History**: Persistent conversation history for each data source
-- **Real-time Processing**: Instant responses with loading indicators
-- **Markdown Support**: Rich text formatting in chat responses
+| Layer       | Tools                                                              |
+| ----------- | ------------------------------------------------------------------ |
+| Frontend    | Next.js 15, React 19, TypeScript, Tailwind CSS 4                   |
+| AI          | Vercel AI SDK, LangChain, OpenAI, Google Generative AI             |
+| Vector DB   | Qdrant                                                             |
+| Database    | Postgres + Prisma                                                  |
+| Auth        | better-auth (GitHub, Google)                                       |
+| Ingestion   | pdf-parse, cheerio + jsdom, youtubei.js                            |
 
-### 🎨 **Modern User Experience**
-- **Intuitive Interface**: Clean, dark-themed UI with smooth animations
-- **Source Management**: Easily switch between different data sources
-- **Upload Progress**: Visual feedback during file processing
-- **Responsive Design**: Works seamlessly across desktop and mobile devices
-- **State Persistence**: Resume conversations exactly where you left off
+## Run locally
 
----
-
-## 🚀 Getting Started
-
-### Prerequisites
-
-Before you begin, ensure you have the following installed:
-- **Node.js** (v16.0 or higher) - [Download here](https://nodejs.org/)
-- **npm** or **yarn** package manager
-- **Git** - [Download here](https://git-scm.com/)
-
-### Installation Guide
-
-1. **Clone the Repository**
-   ```bash
-   git clone https://github.com/srvjha/notecast.git
-   cd notecast
-   ```
-
-2. **Install Dependencies**
-   ```bash
-   # Using npm
-   npm install
-
-   # Or using yarn
-   yarn install
-   ```
-
-3. **Environment Setup**
-   Create a `.env` file in the root directory:
-   ```bash
-   # Add your environment variables
-   OPENAI_API_KEY=your_openai_key
-   GEMINI_API_KEY=your_gemini_key
-   QDRANT_API_KEY=your_qdrant_key
-   QDRANT_URL=your_qdrant_url
-   QDRANT_HOST=your_qdrant_host
-   # Add other required API keys or configuration
-   ```
-
-4. **Start Development Server**
-   ```bash
-   # Using npm
-   npm run dev
-
-   # Or using yarn  
-   yarn dev
-   ```
-
-5. **Open Your Browser**
-   Navigate to `http://localhost:3000` to see the application running.
-
-### Building for Production
+Requires Node 18+ and access to a Postgres instance and a Qdrant cluster
+(local or hosted).
 
 ```bash
-# Build the application
-npm run build
-
-# Start production server
-npm start
+git clone https://github.com/srvjha/notecast.git
+cd notecast
+npm install
+cp .env.sample .env   # fill in the values below
+npx prisma migrate deploy
+npm run dev
 ```
 
----
+The app runs at `http://localhost:3000`.
 
-## 📁 Project Structure
+### Environment variables
 
-```
-notecast/
-├── 📁 .next/                 # Next.js build files
-├── 📁 node_modules/          # Dependencies
-├── 📁 public/               # Static assets
-├── 📁 src/                  # Source code
-│   ├── 📁 app/              # Next.js 13+ App Router
-│   │   ├── 📁 api/          # API routes
-│   │   │   ├── 📁 chat/     # Chat endpoints
-│   │   │   ├── 📁 pdfchat/  # PDF processing endpoints  
-│   │   │   ├── 📁 textindexing/  # Text indexing endpoints
-│   │   │   └── 📁 webindexing/   # Web scraping endpoints
-│   │   ├── 📁 guide/        # Documentation pages
-│   │   ├── 🎨 favicon.ico   # App favicon
-│   │   ├── 🌐 globals.css   # Global styles
-│   │   ├── 📄 layout.tsx    # Root layout component
-│   │   ├── 📄 page.tsx      # Main page component
-│   │   └── 📄 Providers.tsx # Context providers
-│   ├── 📁 components/       # React components
-│   │   ├── 📁 ui/          # Reusable UI components
-│   │   ├── 📄 ChatBox.tsx   # Chat interface component
-│   │   ├── 📄 InputBox.tsx  # Source management component
-│   │   └── 📄 UploadSourceModal.tsx  # Upload modal
-│   ├── 📁 services/         # API services & data fetching
-│   └── 📁 utils/           # Utility functions & helpers
-├── 📄 .gitignore           # Git ignore rules
-├── 📄 README.md           # Project documentation
-├── 📄 package.json        # Dependencies & scripts
-├── 📄 tailwind.config.js  # Tailwind CSS configuration
-└── 📄 tsconfig.json       # TypeScript configuration
+```env
+DATABASE_URL=
+
+OPENAI_API_KEY=
+GEMINI_API_KEY=
+
+QDRANT_URL=
+QDRANT_HOST=
+QDRANT_API_KEY=
+
+GITHUB_CLIENT_ID=
+GITHUB_CLIENT_SECRET=
+GOOGLE_CLIENT_ID=
+GOOGLE_CLIENT_SECRET=
+
+BETTER_AUTH_SECRET=
+BETTER_AUTH_URL=http://localhost:3000
+
+NEXT_PUBLIC_COLLECTION_NAME=qdrantdb
 ```
 
----
+## Scripts
 
-## 🛠️ How It Works
+| Command         | What it does                            |
+| --------------- | --------------------------------------- |
+| `npm run dev`   | Start the dev server                    |
+| `npm run build` | Production build                        |
+| `npm start`     | Run the production build                |
+| `npm run lint`  | Lint the project                        |
 
-### 1. **Data Upload & Processing**
-- Choose your data source: PDF file, website URL, or direct text
-- The application processes and indexes your content using advanced NLP techniques
-- Data is stored locally in your browser for instant access
+## Contributing
 
-### 2. **Intelligent Indexing** 
-- Content is chunked and vectorized for optimal retrieval
-- Semantic search capabilities ensure relevant information retrieval
-- RAG pipeline combines retrieval with generation for accurate responses
+Issues and PRs welcome. For larger changes, open an issue first so we can
+align on the direction.
 
-### 3. **Contextual Chat**
-- Ask questions in natural language about your uploaded content
-- The AI provides accurate, context-aware responses based on your data
-- Chat history is preserved for each data source
+## License
 
----
+MIT — see [LICENSE](LICENSE).
 
-## 🎯 Use Cases
+## Contact
 
-### 📚 **Academic Research**
-- Upload research papers and query specific findings
-- Analyze multiple documents simultaneously
-- Generate summaries and extract key insights
-
-### 💼 **Business Intelligence** 
-- Process company reports and financial documents
-- Query policies, procedures, and documentation
-- Extract actionable insights from business data
-
-### 📖 **Personal Knowledge Management**
-- Create a searchable library of your notes and documents  
-- Quick reference for important information
-- Build your personal AI assistant trained on your content
-
-### 🌐 **Content Analysis**
-- Analyze website content and articles
-- Compare information across multiple sources
-- Research and fact-checking assistance
-
----
-
-## 🔧 Technical Stack
-
-- **Frontend**: Next.js 13+, React, TypeScript
-- **Styling**: Tailwind CSS
-- **State Management**: React Hook Form, React Query
-- **UI Components**: Custom components with Lucide icons
-- **Storage**: Browser localStorage for data persistence
-- **AI/ML**: RAG (Retrieval Augmented Generation) pipeline
-- **File Processing**: PDF parsing, web scraping capabilities
-
----
-
-## 🚦 Current Limitations & Roadmap
-
-### Currently Supports:
-- ✅ PDF files
-- ✅ Website URLs  
-- ✅ Direct text input
-- ✅ Local storage persistence
-
-### Planned Features:
-- 📋 CSV and Excel file support
-- 🗄️ Cloud storage integration
-- 👥 Multi-user support
-- 🔍 Advanced search filters
-- 📊 Analytics and insights dashboard
-- 🔄 Real-time collaboration
-
----
-
-## 🤝 Contributing
-
-We welcome contributions! Please feel free to submit a Pull Request. For major changes, please open an issue first to discuss what you would like to change.
-
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
-
----
-
-## 📝 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
----
-
-## 🙋‍♂️ Support & Contact
-
-- **Live Demo**: [notecast.srvjha.in](https://notecast.srvjha.in/)
-- **Video Tutorial**: [YouTube Demo](https://youtu.be/jkEWwFz5X_A)
-- **Issues**: [GitHub Issues](https://github.com/srvjha/notecast/issues)
-- **Developer**: [@srvjha](https://github.com/srvjha)
-
----
-
-## 🌟 Acknowledgments
-
-- Thanks to the open-source community for the amazing tools and libraries
-- Special recognition to the RAG research community for advancing the field
-- Built with ❤️ for knowledge workers and researchers everywhere
-
----
-
-**⭐ If you find this project useful, please consider giving it a star on GitHub!**
+Built by [@srvjha](https://github.com/srvjha). Bugs and feedback go in
+[GitHub Issues](https://github.com/srvjha/notecast/issues).
